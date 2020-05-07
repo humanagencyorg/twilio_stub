@@ -2,8 +2,8 @@ require "buts_oiliwt/db"
 
 module ButsOiliwt
   module RestClientPatch
-    PREFIX_MATCHER = /https:\/\/([^\.]*)/
-    HOST_MATCHER = /https:\/\/[^\/]*/
+    PREFIX_MATCHER = /https:\/\/([^\.]*)/.freeze
+    HOST_MATCHER = /https:\/\/[^\/]*/.freeze
 
     private_constant :PREFIX_MATCHER
     private_constant :HOST_MATCHER

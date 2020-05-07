@@ -9,7 +9,7 @@ require "buts_oiliwt/db"
 require "buts_oiliwt/dialog_resolver"
 
 module ButsOiliwt
-   class App < Sinatra::Base
+  class App < Sinatra::Base
     register Sinatra::CrossOrigin
 
     # Twilio js sdk
@@ -17,13 +17,12 @@ module ButsOiliwt
       content_type "text/javascript"
       file_path = File.join(File.dirname(__FILE__), "/assets/sdk.js")
       host = DB.read("host")
-      file = File.read(file_path)
 
       status 200
 
-      IO
-        .read(file_path)
-        .sub(/\#HOST\#/, host)
+      IO.
+        read(file_path).
+        sub(/\#HOST\#/, host)
     end
 
     # Twilio js api calls

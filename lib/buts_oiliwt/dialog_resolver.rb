@@ -34,7 +34,7 @@ module ButsOiliwt
     end
 
     def handle_task_start(actions)
-      actions.each do |action|
+      actions.each do |action| # rubocop:disable Metrics/BlockLength
         if action.key?("say")
           write_message(action["say"])
         elsif action.key?("collect")
@@ -43,7 +43,7 @@ module ButsOiliwt
             {},
           )
           DB.write(
-           "channel_#{@channel_name}_collection",
+            "channel_#{@channel_name}_collection",
             action,
           )
           write_message(
