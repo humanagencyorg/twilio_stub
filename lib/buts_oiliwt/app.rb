@@ -7,22 +7,23 @@ require "faker"
 
 require "buts_oiliwt/db"
 require "buts_oiliwt/dialog_resolver"
+require "buts_oiliwt/bootable"
 
 module ButsOiliwt
   class App < Sinatra::Base
+    extend Bootable
+
     register Sinatra::CrossOrigin
 
     # Twilio js sdk
     get "/sdk/js/chat/v3.3/twilio-chat.min.js" do
       content_type "text/javascript"
       file_path = File.join(File.dirname(__FILE__), "/assets/sdk.js")
-      host = DB.read("host")
-
       status 200
 
       IO.
         read(file_path).
-        sub(/\#HOST\#/, host)
+        sub(/\#HOST\#/, ButsOiliwt::TWILIO_HOST)
     end
 
     # Twilio js api calls
@@ -89,7 +90,7 @@ module ButsOiliwt
     end
 
     # Api requests
-    get "/chat/v2/Services/:assistant_id/Channels/:visitor_id" do
+    get "/v2/Services/:assistant_id/Channels/:visitor_id" do
       DB.write("assistant_id", params[:assistant_id])
       DB.write("customer_id", params[:visitor_id])
 
@@ -98,14 +99,14 @@ module ButsOiliwt
       { unique_name: "hello", sid: "hello_sid" }.to_json
     end
 
-    post "/chat/v2/Services/:assistant_id/Channels/:channel_sid/Webhooks" do
+    post "/v2/Services/:assistant_id/Channels/:channel_sid/Webhooks" do
       content_type "application/json"
       status 200
 
       {}.to_json
     end
 
-    post "/autopilot/v1/Assistants" do
+    post "/v1/Assistants" do
       sid = "UA" + Faker::Crypto.md5
       friendly_name = params["FriendlyName"]
       unique_name = sid + "-" + Faker::Code.imei
@@ -123,7 +124,7 @@ module ButsOiliwt
       { sid: sid, unique_name: unique_name }.to_json
     end
 
-    post "/api/:api_version/Accounts/:account_id/IncomingPhoneNumbers.json" do
+    post "/:api_version/Accounts/:account_id/IncomingPhoneNumbers.json" do
       phone_number = Faker::PhoneNumber.cell_phone
       phone_number_sid = "PN" + Faker::Crypto.md5
 
