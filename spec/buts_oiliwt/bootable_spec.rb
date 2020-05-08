@@ -61,7 +61,7 @@ RSpec.describe ButsOiliwt::Bootable do
         with(dummy_class_instance, port: 9292)
       expect(server_instance).to have_received(:boot)
     end
-    
+
     it "memoizes server" do
       dummy_class = Class.new { extend ButsOiliwt::Bootable }
       dummy_class_instance = instance_double(dummy_class)

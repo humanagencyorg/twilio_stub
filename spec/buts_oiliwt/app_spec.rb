@@ -2,7 +2,6 @@ require "jwt"
 require "rack/test"
 require "spec_helper"
 
-
 RSpec.describe ButsOiliwt::App do
   module RSpecMixin
     include Rack::Test::Methods
@@ -31,7 +30,8 @@ RSpec.describe ButsOiliwt::App do
       it "returns content type javascript" do
         get "/sdk/js/chat/v3.3/twilio-chat.min.js"
 
-        expect(last_response.content_type).to eq("text/javascript;charset=utf-8")
+        expect(last_response.content_type).
+          to eq("text/javascript;charset=utf-8")
       end
 
       it "sets host to ButsOiliwt.twilio_host" do
