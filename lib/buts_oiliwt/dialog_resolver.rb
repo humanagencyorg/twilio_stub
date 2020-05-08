@@ -11,41 +11,51 @@ module ButsOiliwt
     end
 
     def call
-      if DB.read("channel_#{@channel_name}_collection")
-        resolve_next_message
-      else
-        resolve_first_message
+      current_task = read_data("action")
+
+      return start_dialog unless current_task
+
+      case get_action_type(read_data("action"))
+      when "collect"
+        continue_collect_dialog
+      when "listen"
+        finish_listen_dialog
       end
     end
 
     private
 
-    def resolve_first_message
-      task = find_task_by_name("greeting")
-      redirect = task.dig("actions", "actions", 0, "redirect")
-      task_name = redirect.gsub("task://", "")
-
-      next_task = find_task_by_name(task_name)
-      DB.write(
-        "channel_#{@channel_name}_dialog_sid",
-        random_dialog_string,
-      )
-      handle_task_start(next_task.dig("actions", "actions"))
+    def read_data(postfix)
+      DB.read("channel_#{@channel_name}_#{postfix}")
     end
 
-    def handle_task_start(actions)
+    def write_data(postfix, data)
+      DB.write("channel_#{@channel_name}_#{postfix}", data)
+    end
+
+    def start_dialog
+      task = find_task_by_name("greeting")
+
+      write_data("dialog_sid", random_dialog_string)
+      write_data("task", task)
+
+      handle_actions(task.dig("actions", "actions"))
+    end
+
+    def handle_actions(actions)
       actions.each do |action| # rubocop:disable Metrics/BlockLength
-        if action.key?("say")
+        case get_action_type(action)
+        when "say"
           write_message(action["say"])
-        elsif action.key?("collect")
-          DB.write(
-            "channel_#{@channel_name}_results",
-            {},
-          )
-          DB.write(
-            "channel_#{@channel_name}_collection",
-            action,
-          )
+        when "redirect"
+          handle_redirect_action(action)
+          break
+        when "listen"
+          write_data("action", action)
+          break
+        when "collect"
+          write_data("results", {})
+          write_data("action", action)
           write_message(
             action.dig(
               "collect",
@@ -54,40 +64,82 @@ module ButsOiliwt
               "question",
             ),
           )
-        elsif action.key?("redirect")
-          dialog_sid = DB.read("channel_#{@channel_name}_dialog_sid")
-          url = action.dig("redirect", "uri")
-          body = {
-            DialogueSid: dialog_sid,
-          }
-
-          result = Net::HTTP.post_form(
-            URI(url),
-            body,
-          )
-
-          actions = JSON.parse(result.body)["actions"]
-
-          handle_task_start(actions)
+          break
         end
       end
     end
 
-    def resolve_next_message
-      collection = DB.read("channel_#{@channel_name}_collection")
-      results = DB.read("channel_#{@channel_name}_results")
-      messages_key = "channel_#{@channel_name}_messages"
-      messages = DB.read(messages_key)
+    def handle_redirect_action(action)
+      case action["redirect"]
+      when String
+        task_name = action["redirect"].gsub("task://", "")
+        task = find_task_by_name(task_name)
 
-      current_name = collection.dig(
+        write_data("task", task)
+
+        handle_actions(task.dig("actions", "actions"))
+      when Hash
+        dialog_sid = read_data("dialog_sid")
+        url = action.dig("redirect", "uri")
+        body = {
+          DialogueSid: dialog_sid,
+        }
+
+        result = Net::HTTP.post_form(
+          URI(url),
+          body,
+        )
+
+        actions = JSON.parse(result.body)["actions"]
+
+        handle_actions(actions)
+      end
+    end
+
+    def get_action_type(action)
+      action.keys.first
+    end
+
+    def finish_listen_dialog
+      result = read_data("messages").
+        reverse.
+        detect { |m| m[:author] != "bot" }.
+        dig(:body)
+
+      task_names = read_data("action").
+        dig("listen", "tasks")
+
+      tasks = task_names.map(&method(:find_task_by_name))
+      task = tasks.detect do |t|
+        result == t.dig("samples", 0, "taggedText")
+      end
+
+      write_data("task", nil)
+      write_data("action", nil)
+      write_data("results", nil)
+
+      actions = task.dig(
+        "actions",
+        "actions",
+      )
+
+      handle_actions(actions)
+    end
+
+    def continue_collect_dialog
+      task = read_data("action")
+      results = read_data("results")
+      messages = read_data("messages")
+
+      field_name = task.dig(
         "collect",
         "questions",
         results.keys.count,
         "name",
       )
-      results[current_name] = messages.last[:body]
+      results[field_name] = messages.last[:body]
 
-      next_question = collection.dig(
+      next_question = task.dig(
         "collect",
         "questions",
         results.keys.count,
@@ -95,22 +147,15 @@ module ButsOiliwt
       )
 
       if next_question
-        write_message(
-          collection.dig(
-            "collect",
-            "questions",
-            results.keys.count,
-            "question",
-          ),
-        )
-        DB.write("channel_#{@channel_name}_results", results)
+        write_message(next_question)
+        write_data("results", results)
       else
-        resolve_on_complete_callback(results)
+        finish_collect_dialog(results)
       end
     end
 
-    def resolve_on_complete_callback(results)
-      dialog_sid = DB.read("channel_#{@channel_name}_dialog_sid")
+    def finish_collect_dialog(results)
+      dialog_sid = read_data("dialog_sid")
       body_results = results.map do |k, v|
         [k, { answer: v }]
       end.to_h
@@ -128,7 +173,7 @@ module ButsOiliwt
         }.to_json,
       }
 
-      url = DB.read("channel_#{@channel_name}_collection").dig(
+      url = read_data("action").dig(
         "collect",
         "on_complete",
         "redirect",
@@ -140,35 +185,12 @@ module ButsOiliwt
       )
 
       result_body = JSON.parse(result.body)
-      action = result_body.dig("actions", 0)
 
-      if action.key?("say")
-        end_conversation(result_body)
-      elsif action.key?("redirect")
-        next_task = find_task_by_name(
-          action["redirect"].gsub("task://", ""),
-        )
-        handle_task_start(
-          next_task.dig("actions", "actions"),
-        )
+      write_data("task", nil)
+      write_data("action", nil)
+      write_data("results", nil)
 
-        if next_task["uniqueName"] == "complete"
-          end_conversation
-        end
-      end
-    end
-
-    def end_conversation
-      DB.write(
-        "channel_#{@channel_name}_results",
-        nil,
-      )
-      DB.write(
-        "channel_#{@channel_name}_collection",
-        nil,
-      )
-
-      @schema = nil
+      handle_actions(result_body["actions"])
     end
 
     def find_task_by_name(name)
@@ -178,15 +200,14 @@ module ButsOiliwt
     end
 
     def write_message(message)
-      messages_key = "channel_#{@channel_name}_messages"
-      messages = DB.read(messages_key)
+      messages = read_data("messages")
       messages.push(
         body: message,
         author: "bot",
         sid: random_message_string,
       )
 
-      DB.write(messages_key, messages)
+      write_data("messages", messages)
       @async_task.sleep(0.5)
     end
 
