@@ -1,12 +1,12 @@
 require_relative "../spec_helper"
 
 require "socket"
-require "buts_oiliwt/bootable"
+require "twilio_stub/bootable"
 
-RSpec.describe ButsOiliwt::Bootable do
+RSpec.describe TwilioStub::Bootable do
   describe ".port" do
     it "returns available port" do
-      dummy_class = Class.new { extend ButsOiliwt::Bootable }
+      dummy_class = Class.new { extend TwilioStub::Bootable }
       fake_server_addr = ["AF_INET6", 9292, "::", "::"]
       server_instance = instance_double(TCPServer)
 
@@ -23,7 +23,7 @@ RSpec.describe ButsOiliwt::Bootable do
     end
 
     it "memoizes port" do
-      dummy_class = Class.new { extend ButsOiliwt::Bootable }
+      dummy_class = Class.new { extend TwilioStub::Bootable }
       fake_server_addr = ["AF_INET6", 3000, "::", "::"]
       server_instance = instance_double(TCPServer)
 
@@ -44,7 +44,7 @@ RSpec.describe ButsOiliwt::Bootable do
 
   describe ".boot_once" do
     it "starts capybara server with defined port" do
-      dummy_class = Class.new { extend ButsOiliwt::Bootable }
+      dummy_class = Class.new { extend TwilioStub::Bootable }
       dummy_class_instance = instance_double(dummy_class)
       server_instance = instance_double(Capybara::Server)
 
@@ -63,7 +63,7 @@ RSpec.describe ButsOiliwt::Bootable do
     end
 
     it "memoizes server" do
-      dummy_class = Class.new { extend ButsOiliwt::Bootable }
+      dummy_class = Class.new { extend TwilioStub::Bootable }
       dummy_class_instance = instance_double(dummy_class)
       server_instance = instance_double(Capybara::Server)
 

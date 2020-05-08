@@ -1,7 +1,7 @@
 require "pstore"
 require "singleton"
 
-module ButsOiliwt
+module TwilioStub
   class Db
     FILENAME = "twilio-stub.store".freeze
 

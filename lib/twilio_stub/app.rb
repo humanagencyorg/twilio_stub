@@ -5,10 +5,10 @@ require "sinatra/cross_origin"
 require "jwt"
 require "faker"
 
-require "buts_oiliwt/dialog_resolver"
-require "buts_oiliwt/bootable"
+require "twilio_stub/dialog_resolver"
+require "twilio_stub/bootable"
 
-module ButsOiliwt
+module TwilioStub
   class App < Sinatra::Base
     extend Bootable
 
@@ -22,7 +22,7 @@ module ButsOiliwt
 
       IO.
         read(file_path).
-        sub(/\#HOST\#/, ButsOiliwt.twilio_host)
+        sub(/\#HOST\#/, TwilioStub.twilio_host)
     end
 
     # Twilio js api calls

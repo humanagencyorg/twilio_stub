@@ -1,16 +1,16 @@
 lib = File.expand_path("lib", __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "buts_oiliwt/version"
+require "twilio_stub/version"
 
 Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
-  spec.name          = "buts_oiliwt"
-  spec.version       = ButsOiliwt::VERSION
+  spec.name          = "twilio_stub"
+  spec.version       = TwilioStub::VERSION
   spec.authors       = ["Alex Beznos"]
   spec.email         = ["beznosa@yahoo.com"]
 
   spec.summary       = "Stub server for specific needs."
   spec.description   = "Stub server for specific needs."
-  spec.homepage      = "https://github.com/humanagencyorg/buts_oiliwt"
+  spec.homepage      = "https://github.com/humanagencyorg/twilio_stub"
   spec.license       = "MIT"
 
   spec.required_ruby_version = ">= 2.6"

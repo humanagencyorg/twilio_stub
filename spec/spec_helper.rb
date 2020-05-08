@@ -1,7 +1,7 @@
 ENV["RACK_ENV"] = "test"
 
 require "bundler/setup"
-require "buts_oiliwt"
+require "twilio_stub"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

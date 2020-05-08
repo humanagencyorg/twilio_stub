@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    buts_oiliwt (0.0.8)
+    twilio_stub (0.1.0)
       async (~> 1.26)
       capybara
       faker (~> 2.11)
@@ -110,11 +110,11 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 2.0)
-  buts_oiliwt!
   pry (~> 0.13)
   rake (>= 12.3.3)
   rspec (~> 3.0)
   rubocop (>= 0.82)
+  twilio_stub!
 
 BUNDLED WITH
    2.1.4

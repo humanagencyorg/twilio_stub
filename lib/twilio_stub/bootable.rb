@@ -2,7 +2,7 @@ require "socket"
 require "capybara"
 require "capybara/server"
 
-module ButsOiliwt
+module TwilioStub
   module Bootable
     def boot_once
       @boot_once ||= boot

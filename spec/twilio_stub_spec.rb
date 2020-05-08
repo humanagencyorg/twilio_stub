@@ -1,22 +1,22 @@
 require_relative "./spec_helper"
 
-require "buts_oiliwt/app"
-require "buts_oiliwt/db"
+require "twilio_stub/app"
+require "twilio_stub/db"
 
-RSpec.describe ButsOiliwt do
+RSpec.describe TwilioStub do
   describe ".boot" do
     it "calls App.boot_once" do
-      allow(ButsOiliwt::App).to receive(:boot_once)
+      allow(TwilioStub::App).to receive(:boot_once)
 
       described_class.boot
 
-      expect(ButsOiliwt::App).to have_received(:boot_once)
+      expect(TwilioStub::App).to have_received(:boot_once)
     end
   end
 
   describe ".twilio_host" do
     it "returns localhost with App's port" do
-      allow(ButsOiliwt::App).to receive(:port).and_return(9292)
+      allow(TwilioStub::App).to receive(:port).and_return(9292)
 
       expect(described_class.twilio_host).to eq("http://localhost:9292")
     end
@@ -33,7 +33,7 @@ RSpec.describe ButsOiliwt do
         and_return(webmock_instance)
       allow(webmock_instance).
         to receive(:to_rack).
-        with(ButsOiliwt::App)
+        with(TwilioStub::App)
 
       described_class.stub_requests
 
@@ -42,17 +42,17 @@ RSpec.describe ButsOiliwt do
         with(:any, /twilio.com/)
       expect(webmock_instance).
         to have_received(:to_rack).
-        with(ButsOiliwt::App)
+        with(TwilioStub::App)
     end
   end
 
   describe ".clear_store" do
     it "calls DB to clear it" do
-      allow(ButsOiliwt::DB).to receive(:clear_all)
+      allow(TwilioStub::DB).to receive(:clear_all)
 
       described_class.clear_store
 
-      expect(ButsOiliwt::DB).to have_received(:clear_all)
+      expect(TwilioStub::DB).to have_received(:clear_all)
     end
   end
 end
