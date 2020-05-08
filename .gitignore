@@ -12,3 +12,6 @@
 
 # vim artefacts
 *.swp
+
+# temp files
+twilio-stub.store
