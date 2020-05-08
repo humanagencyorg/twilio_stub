@@ -29,8 +29,8 @@ jobs:
         bundle install --jobs 4 --retry 3
     - name: RSpec
       run: bundle exec rspec spec
-    - uses: actions/checkout@v1
     - name: Build and publish gem
+      if: success()
       uses: jstastny/publish-gem-to-github@v1.0
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
