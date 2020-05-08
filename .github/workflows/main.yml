@@ -7,10 +7,28 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.6
+    - run: ruby -v
+    - run: gem install rubocop
+    - name: rubocop
+      run: rubocop
+    - uses: actions/cache@v1
+      with:
+        path: vendor/bundle
+        key: bundle-use-ruby-${{ matrix.os }}-${{ matrix.ruby }}-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          bundle-use-ruby-${{ matrix.os }}-${{ matrix.ruby }}-
+    - name: bundle install
+      run: |
+        bundle config path vendor/bundle
+        bundle install --jobs 4 --retry 3
+    - name: RSpec
+      run: bundle exec rspec spec
     - uses: actions/checkout@v1
     - name: Build and publish gem
       uses: jstastny/publish-gem-to-github@v1.0
