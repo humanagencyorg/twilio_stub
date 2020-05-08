@@ -8,8 +8,11 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.authors       = ["Alex Beznos"]
   spec.email         = ["beznosa@yahoo.com"]
 
-  spec.summary       = "Stub server for specific needs."
-  spec.description   = "Stub server for specific needs."
+  spec.summary       = "Stub server for Twilio."
+  spec.description   = "Gem adds ability to stub backend requests, "\
+                       "js sdk requests and request for schema upload. "\
+                       "When all this elements are stubbed it can be used as "\
+                       "full featured chating engine."
   spec.homepage      = "https://github.com/humanagencyorg/twilio_stub"
   spec.license       = "MIT"
 
