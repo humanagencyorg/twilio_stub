@@ -5,7 +5,6 @@ require "sinatra/cross_origin"
 require "jwt"
 require "faker"
 
-require "buts_oiliwt/db"
 require "buts_oiliwt/dialog_resolver"
 require "buts_oiliwt/bootable"
 
@@ -23,7 +22,7 @@ module ButsOiliwt
 
       IO.
         read(file_path).
-        sub(/\#HOST\#/, ButsOiliwt::TWILIO_HOST)
+        sub(/\#HOST\#/, ButsOiliwt.twilio_host)
     end
 
     # Twilio js api calls
@@ -80,7 +79,7 @@ module ButsOiliwt
     end
 
     # Microservice routes stub
-    post "/microservice/autopilot/update" do
+    post "/autopilot/update" do
       body = JSON.parse(request.body.read)
       schema = JSON.parse(body["schema"])
 

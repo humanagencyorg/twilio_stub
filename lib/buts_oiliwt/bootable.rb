@@ -4,14 +4,6 @@ require "capybara/server"
 
 module ButsOiliwt
   module Bootable
-    def boot
-      instance = new
-
-      Capybara::Server.
-        new(instance, port: port).
-        tap(&:boot)
-    end
-
     def boot_once
       @boot_once ||= boot
     end
@@ -21,6 +13,14 @@ module ButsOiliwt
     end
 
     private
+
+    def boot
+      instance = new
+
+      Capybara::Server.
+        new(instance, port: port).
+        tap(&:boot)
+    end
 
     def find_available_port
       server = TCPServer.new(0)
