@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    buts_oiliwt (0.0.5)
+    buts_oiliwt (0.0.6)
       async (~> 1.26)
       capybara
       faker (~> 2.11)
