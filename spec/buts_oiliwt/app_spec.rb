@@ -13,6 +13,8 @@ RSpec.describe ButsOiliwt::App do
   end
 
   before do
+    ButsOiliwt.clear_store
+
     RSpec.configure do |c|
       c.include RSpecMixin
     end
