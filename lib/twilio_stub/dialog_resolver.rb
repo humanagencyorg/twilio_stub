@@ -1,9 +1,9 @@
 require "net/http"
 require "uri"
 
-require "buts_oiliwt/db"
+require "twilio_stub/db"
 
-module ButsOiliwt
+module TwilioStub
   class DialogResolver
     def initialize(channel_name, async_task)
       @channel_name = channel_name

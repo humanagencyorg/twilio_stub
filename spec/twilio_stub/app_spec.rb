@@ -2,7 +2,7 @@ require "jwt"
 require "rack/test"
 require "spec_helper"
 
-RSpec.describe ButsOiliwt::App do
+RSpec.describe TwilioStub::App do
   module RSpecMixin
     include Rack::Test::Methods
 
@@ -12,7 +12,7 @@ RSpec.describe ButsOiliwt::App do
   end
 
   before do
-    ButsOiliwt.clear_store
+    TwilioStub.clear_store
 
     RSpec.configure do |c|
       c.include RSpecMixin
@@ -34,9 +34,9 @@ RSpec.describe ButsOiliwt::App do
           to eq("text/javascript;charset=utf-8")
       end
 
-      it "sets host to ButsOiliwt.twilio_host" do
+      it "sets host to TwilioStub.twilio_host" do
         fake_host = "localhost:1234"
-        allow(ButsOiliwt).to receive(:twilio_host).and_return(fake_host)
+        allow(TwilioStub).to receive(:twilio_host).and_return(fake_host)
         get "/sdk/js/chat/v3.3/twilio-chat.min.js"
 
         expect(last_response.body).to include("host: \"#{fake_host}\"")
@@ -83,7 +83,7 @@ RSpec.describe ButsOiliwt::App do
 
         get "/js_api/channels/#{channel_name}", params
 
-        channel_record = ButsOiliwt::DB.read("channel_#{channel_name}")
+        channel_record = TwilioStub::DB.read("channel_#{channel_name}")
         expect(channel_record[:name]).to eq(channel_name)
         expect(channel_record[:customer_id]).to eq(identity)
         expect(channel_record[:chat_id]).to eq(service_sid)
@@ -107,7 +107,7 @@ RSpec.describe ButsOiliwt::App do
         get "/js_api/channels/#{channel_name}", params
 
         db_key = "channel_#{channel_name}_messages"
-        messages = ButsOiliwt::DB.read(db_key)
+        messages = TwilioStub::DB.read(db_key)
 
         expect(messages).to eq([])
       end
@@ -117,7 +117,7 @@ RSpec.describe ButsOiliwt::App do
       it "returns status 200" do
         channel_name = "channel"
         db_key = "channel_#{channel_name}_messages"
-        ButsOiliwt::DB.write(db_key, ["message"])
+        TwilioStub::DB.write(db_key, ["message"])
 
         get "/js_api/channels/#{channel_name}/messages"
 
@@ -128,7 +128,7 @@ RSpec.describe ButsOiliwt::App do
         channel_name = "channel"
         messages = ["fisrt", "second", "last"]
         db_key = "channel_#{channel_name}_messages"
-        ButsOiliwt::DB.write(db_key, messages)
+        TwilioStub::DB.write(db_key, messages)
 
         get "/js_api/channels/#{channel_name}/messages"
 
@@ -146,7 +146,7 @@ RSpec.describe ButsOiliwt::App do
         }.to_json
         headers = { "CONTENT_TYPE" => "application/json" }
         db_key = "channel_#{channel_name}"
-        ButsOiliwt::DB.write(db_key, {})
+        TwilioStub::DB.write(db_key, {})
 
         stub_dialog_resolver
 
@@ -162,13 +162,13 @@ RSpec.describe ButsOiliwt::App do
         }.to_json
         headers = { "CONTENT_TYPE" => "application/json" }
         db_key = "channel_#{channel_name}"
-        ButsOiliwt::DB.write(db_key, {})
+        TwilioStub::DB.write(db_key, {})
 
         dialog_resolver = stub_dialog_resolver
 
         post "/js_api/channels/#{channel_name}/messages", request_body, headers
 
-        expect(ButsOiliwt::DialogResolver).
+        expect(TwilioStub::DialogResolver).
           to have_received(:new).
           with(channel_name, anything)
         expect(dialog_resolver).to have_received(:call)
@@ -187,22 +187,22 @@ RSpec.describe ButsOiliwt::App do
           customer_id: customer_id,
         }
         message_db_key = "channel_#{channel_name}_messages"
-        ButsOiliwt::DB.write(channel_db_key, channel_data)
-        ButsOiliwt::DB.write(message_db_key, [])
+        TwilioStub::DB.write(channel_db_key, channel_data)
+        TwilioStub::DB.write(message_db_key, [])
 
         stub_dialog_resolver
 
         post "/js_api/channels/#{channel_name}/messages", request_body, headers
 
-        last_message = ButsOiliwt::DB.read(message_db_key).last
+        last_message = TwilioStub::DB.read(message_db_key).last
 
         expect(last_message[:body]).to eq(message)
         expect(last_message[:author]).to eq(customer_id)
       end
 
       def stub_dialog_resolver
-        dialog_resolver = instance_double(ButsOiliwt::DialogResolver)
-        allow(ButsOiliwt::DialogResolver).
+        dialog_resolver = instance_double(TwilioStub::DialogResolver)
+        allow(TwilioStub::DialogResolver).
           to receive(:new).
           and_return(dialog_resolver)
         allow(dialog_resolver).to receive(:call)
@@ -225,7 +225,7 @@ RSpec.describe ButsOiliwt::App do
 
         post "autopilot/update", { schema: schema.to_json }.to_json, headers
 
-        db_schema = ButsOiliwt::DB.read("schema")
+        db_schema = TwilioStub::DB.read("schema")
 
         expect(db_schema).to eq(schema)
       end
@@ -244,8 +244,8 @@ RSpec.describe ButsOiliwt::App do
 
         get "/v2/Services/#{assistant_id}/Channels/#{visitor_id}"
 
-        expect(ButsOiliwt::DB.read("assistant_id")).to eq(assistant_id.to_s)
-        expect(ButsOiliwt::DB.read("customer_id")).to eq(visitor_id.to_s)
+        expect(TwilioStub::DB.read("assistant_id")).to eq(assistant_id.to_s)
+        expect(TwilioStub::DB.read("customer_id")).to eq(visitor_id.to_s)
       end
 
       it "returns fake json" do
@@ -281,7 +281,7 @@ RSpec.describe ButsOiliwt::App do
 
         post "/v1/Assistants", params
 
-        chatbot = ButsOiliwt::DB.read("chatbot")
+        chatbot = TwilioStub::DB.read("chatbot")
 
         expect(chatbot[:friendly_name]).to eq(friendly_name)
         expect(chatbot[:assistant_sid]).to eq(sid)
@@ -312,7 +312,7 @@ RSpec.describe ButsOiliwt::App do
 
     describe "POST /:api_v/Accounts/:account_id/IncomingPhoneNumbers.json" do
       it "returns status 200" do
-        ButsOiliwt::DB.write("chatbot", {})
+        TwilioStub::DB.write("chatbot", {})
 
         post "/v2/Accounts/123/IncomingPhoneNumbers.json"
 
@@ -324,7 +324,7 @@ RSpec.describe ButsOiliwt::App do
         phone_number = "4567"
         phone_number_sid = "PN" + md5
 
-        ButsOiliwt::DB.write("chatbot", {})
+        TwilioStub::DB.write("chatbot", {})
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).
@@ -333,7 +333,7 @@ RSpec.describe ButsOiliwt::App do
 
         post "/v2/Accounts/123/IncomingPhoneNumbers.json"
 
-        chatbot = ButsOiliwt::DB.read("chatbot")
+        chatbot = TwilioStub::DB.read("chatbot")
 
         expect(chatbot[:phone_number]).to eq(phone_number)
         expect(chatbot[:phone_number_sid]).to eq(phone_number_sid)
@@ -344,7 +344,7 @@ RSpec.describe ButsOiliwt::App do
         phone_number = "4567"
         phone_number_sid = "PN" + md5
 
-        ButsOiliwt::DB.write("chatbot", {})
+        TwilioStub::DB.write("chatbot", {})
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).

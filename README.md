@@ -1,15 +1,13 @@
-# ButsOiliwt
+# TwilioStub
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/buts_oiliwt`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+This gem allow to stub backend, fronend requests to twilio and js sdk. It should be used in testing environment only.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'buts_oiliwt'
+gem 'twilio_stub'
 ```
 
 And then execute:
@@ -18,22 +16,29 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install buts_oiliwt
+    $ gem install twilio_stub
 
 ## Usage
 
-TODO: Write usage instructions here
+Rspec callbacks should be added in such way:
 
-## Development
+```
+RSpec.configure do |config|
+  config.before(:suite) do
+    ButsOiliwt.boot
+  end
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+  config.around(:each) do |example|
+    ButsOiliwt.stub_requests
+    ButsOiliwt.clear_store
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+    ClimateControl.modify(
+      TWILIO_SDK_HOST: ButsOiliwt.twilio_host,
+      TWILIO_EXECUTOR_URL: ButsOiliwt.twilio_host,
+    ) do
+      example.run
+    end
 
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/buts_oiliwt.
-
-## License
-
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+    ButsOiliwt.clear_store
+  end
+```

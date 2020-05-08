@@ -1,8 +1,8 @@
-require "buts_oiliwt/version"
-require "buts_oiliwt/app"
+require "twilio_stub/version"
+require "twilio_stub/app"
 require "webmock"
 
-module ButsOiliwt
+module TwilioStub
   class Error < StandardError; end
 
   DB = Db.instance
