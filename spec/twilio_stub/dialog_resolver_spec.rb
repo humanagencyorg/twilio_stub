@@ -2,6 +2,8 @@ require "pry"
 require "spec_helper"
 
 RSpec.describe TwilioStub::DialogResolver do
+  let(:fake_task) { fake_task_stub.new }
+
   context "when conversation is not started yet" do
     it "looking for greeting action and execute it" do
       # Preparation
@@ -196,6 +198,10 @@ RSpec.describe TwilioStub::DialogResolver do
       task = fake_task_stub.new
       channel_name = "fake"
       messages_key = "channel_fake_messages"
+      write_message = message_writer(
+        key: messages_key,
+        author: customer_id,
+      )
       expected_results = {
         "name" => "Fake name",
         "second_name" => "Fake second name",
@@ -246,27 +252,9 @@ RSpec.describe TwilioStub::DialogResolver do
 
       # Execution
       described_class.new(channel_name, task).call
-      db_messages = TwilioStub::DB.read(messages_key)
-      db_messages.push(
-        body: "Fake name",
-        author: customer_id,
-        sid: SecureRandom.hex,
-      )
-      TwilioStub::DB.write(
-        messages_key,
-        db_messages,
-      )
+      write_message.("Fake name")
       described_class.new(channel_name, task).call
-      db_messages = TwilioStub::DB.read(messages_key)
-      db_messages.push(
-        body: "Fake second name",
-        author: customer_id,
-        sid: SecureRandom.hex,
-      )
-      TwilioStub::DB.write(
-        messages_key,
-        db_messages,
-      )
+      write_message.("Fake second name")
       described_class.new(channel_name, task).call
 
       # Expectation
@@ -288,6 +276,10 @@ RSpec.describe TwilioStub::DialogResolver do
       task = fake_task_stub.new
       channel_name = "fake"
       messages_key = "channel_fake_messages"
+      write_message = message_writer(
+        key: messages_key,
+        author: customer_id,
+      )
       expected_messages = [
         "What is your name?",
         "Fake name",
@@ -372,38 +364,11 @@ RSpec.describe TwilioStub::DialogResolver do
 
       # Execution
       described_class.new(channel_name, task).call
-      db_messages = TwilioStub::DB.read(messages_key)
-      db_messages.push(
-        body: "Fake name",
-        author: customer_id,
-        sid: SecureRandom.hex,
-      )
-      TwilioStub::DB.write(
-        messages_key,
-        db_messages,
-      )
+      write_message.("Fake name")
       described_class.new(channel_name, task).call
-      db_messages = TwilioStub::DB.read(messages_key)
-      db_messages.push(
-        body: "Fake second name",
-        author: customer_id,
-        sid: SecureRandom.hex,
-      )
-      TwilioStub::DB.write(
-        messages_key,
-        db_messages,
-      )
+      write_message.("Fake second name")
       described_class.new(channel_name, task).call
-      db_messages = TwilioStub::DB.read(messages_key)
-      db_messages.push(
-        body: "email@fake.com",
-        author: customer_id,
-        sid: SecureRandom.hex,
-      )
-      TwilioStub::DB.write(
-        messages_key,
-        db_messages,
-      )
+      write_message.("email@fake.com")
       described_class.new(channel_name, task).call
 
       # Expectation
@@ -425,6 +390,402 @@ RSpec.describe TwilioStub::DialogResolver do
       # Clean up
       TwilioStub::DB.clear_all
     end
+
+    context "when collect question contains validation" do
+      context "whan contain allowed_values" do
+        it "validates result by allowed_values list" do
+          TwilioStub::DB.clear_all
+
+          customer_id = "fake_custom_id"
+          task = fake_task
+          channel_name = "fake"
+          messages_key = "channel_fake_messages"
+          expected_messages = [
+            "Are you sure?",
+            "no",
+            "It should be yes",
+            "no",
+            "Say yes, plz",
+            "yes",
+            "Thanks",
+            "What is your name?",
+            "First name",
+            "thank you",
+          ]
+          write_message = message_writer(
+            key: messages_key,
+            author: customer_id,
+          )
+          schema = {
+            "styleSheet" => {
+              "style_sheet" => {
+                "collect" => {
+                  "validate" => {
+                    "on_failure" => {
+                      "repeat_question" => false,
+                    },
+                  },
+                },
+              },
+            },
+            "tasks" => [
+              {
+                "uniqueName" => "greeting",
+                "actions" => {
+                  "actions" => [
+                    { "redirect" => "task://block" },
+                  ],
+                },
+              },
+              "uniqueName" => "block",
+              "actions" => {
+                "actions" => [
+                  "collect" => {
+                    "questions" => [
+                      {
+                        "question" => "Are you sure?",
+                        "name" => "term",
+                        "validate" => {
+                          "allowed_values" => {
+                            "list" => ["yes"],
+                          },
+                          "on_failure" => {
+                            "messages" => [
+                              { "say" => "It should be yes" },
+                              { "say" => "Say yes, plz" },
+                            ],
+                          },
+                          "on_success" => {
+                            "say" => "Thanks",
+                          },
+                        },
+                      },
+                      {
+                        "question" => "What is your name?",
+                        "name" => "name",
+                      },
+                    ],
+                    "on_complete" => {
+                      "redirect" => {
+                        "uri" => "http://fakeurl.com",
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          }
+          stub_request(:post, "http://fakeurl.com/").
+            with(
+              body: {
+                "DialogueSid" => /.*/,
+                "Memory" => {
+                  "twilio" => {
+                    "collected_data" => {
+                      "data_collect" => {
+                        "answers" => {
+                          "term" => { "answer" => "yes" },
+                          "name" => { "answer" => "First name" },
+                        },
+                      },
+                    },
+                  },
+                }.to_json,
+              },
+              headers: {
+                "Accept" => "*/*",
+                "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+                "Content-Type" => "application/x-www-form-urlencoded",
+                "Host" => "fakeurl.com",
+                "User-Agent" => "Ruby",
+              },
+            ).
+            to_return(
+              status: 200,
+              body: { "actions" => [{ "say" => "thank you" }] }.to_json,
+              headers: {},
+            )
+
+          TwilioStub::DB.write("schema", schema)
+          TwilioStub::DB.write(messages_key, [])
+
+          # Execution
+          described_class.new(channel_name, task).call
+          write_message.("no")
+          described_class.new(channel_name, task).call
+          write_message.("no")
+          described_class.new(channel_name, task).call
+          write_message.("yes")
+          described_class.new(channel_name, task).call
+          write_message.("First name")
+          described_class.new(channel_name, task).call
+
+          # Expectation
+          db_results = TwilioStub::DB.read("channel_fake_results")
+          db_action = TwilioStub::DB.read("channel_fake_action")
+          db_task = TwilioStub::DB.read("channel_fake_task")
+          db_messages = TwilioStub::DB.read(messages_key)
+
+          expect(db_results).to be_nil
+          expect(db_action).to be_nil
+          expect(db_task).to be_nil
+
+          expect(db_messages.count).to eq(10)
+          messages = db_messages.map { |d| d[:body] }
+          expect(messages).to eq(expected_messages)
+
+          expect(task.sleeps).to eq(Array.new(6, 0.5))
+
+          # Clean up
+          TwilioStub::DB.clear_all
+        end
+      end
+
+      context "when validated by type" do
+        it "validates by types" do
+          TwilioStub::DB.clear_all
+          customer_id = "fake_custom_id"
+          task = fake_task_stub.new
+          channel_name = "fake"
+          messages_key = "channel_fake_messages"
+          write_message = message_writer(
+            key: messages_key,
+            author: customer_id,
+          )
+          expected_messages = [
+            "Are you sure?",
+            "fake",
+            "I didn't get.",
+            "yes",
+            "What is your name?",
+            "fake first name",
+            "I didn't get.",
+            "Name",
+            "What is your second name?",
+            "fake second name",
+            "I didn't get.",
+            "Second",
+            "What is your email?",
+            "fake.com",
+            "I didn't get.",
+            "email@fake.com",
+            "What is your city?",
+            "Fake",
+            "I didn't get.",
+            "Kyiv",
+            "What is your country?",
+            "Fake",
+            "I didn't get.",
+            "Ukraine",
+            "What is your us state?",
+            "FAKE",
+            "I didn't get.",
+            "NY",
+            "What is your zip code?",
+            "871638461278364813",
+            "I didn't get.",
+            "123123",
+            "What is your phone number?",
+            "871638461278364813",
+            "I didn't get.",
+            "8716384612",
+            "thanks",
+          ]
+          schema = {
+            "styleSheet" => {
+              "style_sheet" => {
+                "collect" => {
+                  "validate" => {
+                    "on_failure" => {
+                      "messages" => [
+                        { "say" => "I didn't get." },
+                      ],
+                      "repeat_question" => false,
+                    },
+                  },
+                },
+              },
+            },
+            "tasks" => [
+              {
+                "uniqueName" => "greeting",
+                "actions" => {
+                  "actions" => [
+                    { "redirect" => "task://block" },
+                  ],
+                },
+              },
+              "uniqueName" => "block",
+              "actions" => {
+                "actions" => [
+                  "collect" => {
+                    "questions" => [
+                      {
+                        "question" => "Are you sure?",
+                        "name" => "term",
+                        "type" => "Twilio.YES_NO",
+                        "validate" => true,
+                      },
+                      {
+                        "question" => "What is your name?",
+                        "name" => "name",
+                        "type" => "Twilio.FIRST_NAME",
+                        "validate" => true,
+                      },
+                      {
+                        "question" => "What is your second name?",
+                        "name" => "second_name",
+                        "type" => "Twilio.LAST_NAME",
+                        "validate" => true,
+                      },
+                      {
+                        "question" => "What is your email?",
+                        "name" => "email",
+                        "type" => "Twilio.EMAIL",
+                        "validate" => true,
+                      },
+                      {
+                        "question" => "What is your city?",
+                        "name" => "city",
+                        "type" => "Twilio.CITY",
+                        "validate" => true,
+                      },
+                      {
+                        "question" => "What is your country?",
+                        "name" => "country",
+                        "type" => "Twilio.COUNTRY",
+                        "validate" => true,
+                      },
+                      {
+                        "question" => "What is your us state?",
+                        "name" => "state",
+                        "type" => "Twilio.US_STATE",
+                        "validate" => true,
+                      },
+                      {
+                        "question" => "What is your zip code?",
+                        "name" => "zip_code",
+                        "type" => "Twilio.ZIP_CODE",
+                        "validate" => true,
+                      },
+                      {
+                        "question" => "What is your phone number?",
+                        "name" => "phone_number",
+                        "type" => "Twilio.PHONE_NUMBER",
+                        "validate" => true,
+                      },
+                    ],
+                    "on_complete" => {
+                      "redirect" => {
+                        "uri" => "http://fakeurl.com",
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          }
+          stub_request(:post, "http://fakeurl.com/").
+            with(
+              body: {
+                "DialogueSid" => /.*/,
+                "Memory" => {
+                  "twilio" => {
+                    "collected_data" => {
+                      "data_collect" => {
+                        "answers" => {
+                          "term" => { "answer" => "yes" },
+                          "name" => { "answer" => "Name" },
+                          "second_name" => { "answer" => "Second" },
+                          "email" => { "answer" => "email@fake.com" },
+                          "city" => { "answer" => "Kyiv" },
+                          "country" => { "answer" => "Ukraine" },
+                          "state" => { "answer" => "NY" },
+                          "zip_code" => { "answer" => "123123" },
+                          "phone_number" => { "answer" => "8716384612" },
+                        },
+                      },
+                    },
+                  },
+                }.to_json,
+              },
+              headers: {
+                "Accept" => "*/*",
+                "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+                "Content-Type" => "application/x-www-form-urlencoded",
+                "Host" => "fakeurl.com",
+                "User-Agent" => "Ruby",
+              },
+            ).
+            to_return(
+              status: 200,
+              body: { "actions" => [{ "say" => "thanks" }] }.to_json,
+              headers: {},
+            )
+          TwilioStub::DB.write("schema", schema)
+          TwilioStub::DB.write(messages_key, [])
+
+          # Execution
+          described_class.new(channel_name, task).call
+          write_message.("fake")
+          described_class.new(channel_name, task).call
+          write_message.("yes")
+          described_class.new(channel_name, task).call
+          write_message.("fake first name")
+          described_class.new(channel_name, task).call
+          write_message.("Name")
+          described_class.new(channel_name, task).call
+          write_message.("fake second name")
+          described_class.new(channel_name, task).call
+          write_message.("Second")
+          described_class.new(channel_name, task).call
+          write_message.("fake.com")
+          described_class.new(channel_name, task).call
+          write_message.("email@fake.com")
+          described_class.new(channel_name, task).call
+          write_message.("Fake")
+          described_class.new(channel_name, task).call
+          write_message.("Kyiv")
+          described_class.new(channel_name, task).call
+          write_message.("Fake")
+          described_class.new(channel_name, task).call
+          write_message.("Ukraine")
+          described_class.new(channel_name, task).call
+          write_message.("FAKE")
+          described_class.new(channel_name, task).call
+          write_message.("NY")
+          described_class.new(channel_name, task).call
+          write_message.("871638461278364813")
+          described_class.new(channel_name, task).call
+          write_message.("123123")
+          described_class.new(channel_name, task).call
+          write_message.("871638461278364813")
+          described_class.new(channel_name, task).call
+          write_message.("8716384612")
+          described_class.new(channel_name, task).call
+
+          # Expectation
+          db_results = TwilioStub::DB.read("channel_fake_results")
+          db_action = TwilioStub::DB.read("channel_fake_action")
+          db_task = TwilioStub::DB.read("channel_fake_task")
+          db_messages = TwilioStub::DB.read(messages_key)
+
+          expect(db_results).to be_nil
+          expect(db_action).to be_nil
+          expect(db_task).to be_nil
+
+          expect(db_messages.count).to eq(37)
+          messages = db_messages.map { |d| d[:body] }
+
+          expect(messages).to eq(expected_messages)
+
+          expect(task.sleeps).to eq(Array.new(19, 0.5))
+
+          # Clean up
+          TwilioStub::DB.clear_all
+        end
+      end
+    end
   end
 
   context "when listening block" do
@@ -438,6 +799,10 @@ RSpec.describe TwilioStub::DialogResolver do
         "Thank you",
       ]
       messages_key = "channel_fake_messages"
+      write_message = message_writer(
+        key: messages_key,
+        author: customer_id,
+      )
       schema = {
         "tasks" => [
           {
@@ -519,16 +884,7 @@ RSpec.describe TwilioStub::DialogResolver do
 
       # Execution
       described_class.new(channel_name, task).call
-      db_messages = TwilioStub::DB.read(messages_key)
-      db_messages.push(
-        body: "carbonara",
-        author: customer_id,
-        sid: SecureRandom.hex,
-      )
-      TwilioStub::DB.write(
-        messages_key,
-        db_messages,
-      )
+      write_message.("carbonara")
       described_class.new(channel_name, task).call
 
       # Expectation
@@ -564,6 +920,10 @@ RSpec.describe TwilioStub::DialogResolver do
           "Thank you",
         ]
         messages_key = "channel_fake_messages"
+        write_message = message_writer(
+          key: messages_key,
+          author: customer_id,
+        )
         schema = {
           "tasks" => [
             {
@@ -645,27 +1005,9 @@ RSpec.describe TwilioStub::DialogResolver do
 
         # Execution
         described_class.new(channel_name, task).call
-        db_messages = TwilioStub::DB.read(messages_key)
-        db_messages.push(
-          body: "banana",
-          author: customer_id,
-          sid: SecureRandom.hex,
-        )
-        TwilioStub::DB.write(
-          messages_key,
-          db_messages,
-        )
+        write_message.("banana")
         described_class.new(channel_name, task).call
-        db_messages = TwilioStub::DB.read(messages_key)
-        db_messages.push(
-          body: "carbonara",
-          author: customer_id,
-          sid: SecureRandom.hex,
-        )
-        TwilioStub::DB.write(
-          messages_key,
-          db_messages,
-        )
+        write_message.("carbonara")
         described_class.new(channel_name, task).call
 
         # Expectation
@@ -700,6 +1042,21 @@ RSpec.describe TwilioStub::DialogResolver do
       def sleeps
         @sleeps
       end
+    end
+  end
+
+  def message_writer(key:, author:)
+    lambda do |body|
+      db_messages = TwilioStub::DB.read(key)
+      db_messages.push(
+        body: body,
+        author: author,
+        sid: SecureRandom.hex,
+      )
+      TwilioStub::DB.write(
+        key,
+        db_messages,
+      )
     end
   end
 end

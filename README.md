@@ -42,3 +42,14 @@ RSpec.configure do |config|
     ButsOiliwt.clear_store
   end
 ```
+### Twilio validation types
+
+* Twilio.FIRST_NAME - starts with uppercase character, not include special symbols, not include spaces
+* Twilio.LAST_NAME - starts with uppercase character, not include special symbols, not include spaces
+* Twilio.EMAIL - starts with word + @ + first level domain
+* Twilio.CITY - should be one of: `Kyiv`, `Odessa`, `Lviv`, `New York`, `Saint Louis`, `Washington`
+* Twilio.COUNTRY - should be one of: `Ukraine`, `USA`, `United States of America`, `Great Britain`
+* Twilio.US_STATE - should be one of: `MO`, `CA`, `NY`
+* Twilio.ZIP_CODE - should contain 5-6 character long number
+* Twilio.PHONE_NUMBER - should contain 10 character long number
+* Twilio.YES_NO - should be one of: `yes`, `no`

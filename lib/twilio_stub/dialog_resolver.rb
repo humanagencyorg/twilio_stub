@@ -2,6 +2,7 @@ require "net/http"
 require "uri"
 
 require "twilio_stub/db"
+require "twilio_stub/validator"
 
 module TwilioStub
   class DialogResolver
@@ -133,15 +134,23 @@ module TwilioStub
     def continue_collect_dialog
       task = read_data("action")
       results = read_data("results")
-      messages = read_data("messages")
 
-      field_name = task.dig(
+      field = task.dig(
         "collect",
         "questions",
         results.keys.count,
-        "name",
       )
-      results[field_name] = messages.last[:body]
+
+      if field["validate"]
+        process_collect_with_validation(task, field, results)
+      else
+        process_collect(task, field, results)
+      end
+    end
+
+    def process_collect(task, field, results)
+      messages = read_data("messages")
+      results[field["name"]] = messages.last[:body]
 
       next_question = task.dig(
         "collect",
@@ -155,6 +164,80 @@ module TwilioStub
         write_data("results", results)
       else
         finish_collect_dialog(results)
+      end
+    end
+
+    def process_collect_with_validation(task, field, results)
+      messages = read_data("messages")
+      result = messages.last[:body]
+      validation = prepare_validate_attr(field)
+
+      if Validator.valid?(result, field["validate"], field["type"])
+        if validation.dig("on_success")
+          handle_actions([validation.dig("on_success")])
+        end
+
+        results[field["name"]] = result
+
+        next_question = task.dig(
+          "collect",
+          "questions",
+          results.keys.count,
+          "question",
+        )
+        write_data("error_index", nil)
+
+        if next_question
+          write_message(next_question)
+          write_data("results", results)
+        else
+          finish_collect_dialog(results)
+        end
+      else
+        handle_collect_failure(field)
+      end
+    end
+
+    def prepare_validate_attr(field)
+      validation = field["validate"]
+      validation = {} if validation == true
+      validation
+    end
+
+    def handle_collect_failure(field)
+      validation = prepare_validate_attr(field)
+      error_index = read_data("error_index") || 0
+      defaults = schema.dig(
+        "styleSheet",
+        "style_sheet",
+        "collect",
+        "validate",
+        "on_failure",
+      )
+      to_repeat = defaults["repeat_question"]
+
+      if validation["on_failure"]
+        actions = validation.dig("on_failure", "messages")
+        to_repeat = validation.dig(
+          "on_failure",
+          "repeat_question",
+        ) || to_repeat
+      else
+        actions = defaults.dig("messages")
+      end
+
+      action = actions[error_index]
+
+      unless action
+        error_index = 0
+        action = actions[error_index]
+      end
+
+      handle_actions([action])
+      write_data("error_index", error_index + 1)
+
+      if to_repeat
+        handle_actions([{ "say" => field["question"] }])
       end
     end
 
