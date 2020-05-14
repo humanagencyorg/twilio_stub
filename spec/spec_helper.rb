@@ -1,8 +1,14 @@
 ENV["RACK_ENV"] = "test"
 
 require "bundler/setup"
-require "twilio_stub"
 require "webmock/rspec"
+require "simplecov"
+
+SimpleCov.start do
+  add_filter %r{spec}
+end
+
+require "twilio_stub"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
