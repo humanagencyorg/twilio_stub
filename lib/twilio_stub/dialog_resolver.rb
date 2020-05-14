@@ -114,16 +114,20 @@ module TwilioStub
         result == t.dig("samples", 0, "taggedText")
       end
 
-      write_data("task", nil)
-      write_data("action", nil)
-      write_data("results", nil)
+      if task
+        write_data("task", nil)
+        write_data("action", nil)
+        write_data("results", nil)
 
-      actions = task.dig(
-        "actions",
-        "actions",
-      )
+        actions = task.dig(
+          "actions",
+          "actions",
+        )
 
-      handle_actions(actions)
+        handle_actions(actions)
+      else
+        handle_actions(read_data("task").dig("actions", "actions"))
+      end
     end
 
     def continue_collect_dialog
