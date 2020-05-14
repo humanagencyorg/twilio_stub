@@ -1,9 +1,6 @@
-require "pry"
 require "spec_helper"
 
 RSpec.describe TwilioStub::DialogResolver do
-  let(:fake_task) { fake_task_stub.new }
-
   context "when conversation is not started yet" do
     it "looking for greeting action and execute it" do
       # Preparation
@@ -397,7 +394,7 @@ RSpec.describe TwilioStub::DialogResolver do
           TwilioStub::DB.clear_all
 
           customer_id = "fake_custom_id"
-          task = fake_task
+          task = fake_task_stub.new
           channel_name = "fake"
           messages_key = "channel_fake_messages"
           expected_messages = [
