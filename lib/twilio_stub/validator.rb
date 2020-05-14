@@ -10,7 +10,6 @@ module TwilioStub
     PHONE_NUMBER = /^\d{10}$/.freeze
     YES_NO = /^(yes)|(no)$/i.freeze
 
-
     def initialize(value, schema, type)
       @value = value
       @schema = schema
