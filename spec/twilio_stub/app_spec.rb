@@ -351,7 +351,6 @@ RSpec.describe TwilioStub::App do
       end
     end
 
-
     describe "POST /:api_v/Accounts/:account_id/IncomingPhoneNumbers.json" do
       it "returns status 200" do
         TwilioStub::DB.write("chatbot", {})
