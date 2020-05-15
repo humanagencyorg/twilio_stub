@@ -310,6 +310,47 @@ RSpec.describe TwilioStub::App do
       end
     end
 
+    describe "POST /v1/Assistants/:assistant_sid" do
+      it "returns 200" do
+        assistant_sid = "AC123"
+        params = {
+          "DevelopmentStage": "in-production",
+        }
+
+        post "/v1/Assistants/#{assistant_sid}", params
+
+        expect(last_response.status).to eq(200)
+      end
+
+      it "returns the assistant hash (with DevelopmentStage)" do
+        assistant_sid = "AC123"
+        params = {
+          "DevelopmentStage": "in-production",
+        }
+
+        post "/v1/Assistants/#{assistant_sid}", params
+
+        parsed = JSON.parse last_response.body
+        expect(parsed).to include(
+          "sid" => assistant_sid,
+          "development_stage" => "in-production",
+        )
+      end
+
+      it "writes updated assistant data to db" do
+        assistant_sid = "AC123"
+        TwilioStub::DB.write("chatbot", {})
+        params = {
+          "DevelopmentStage": "in-production",
+        }
+
+        post "/v1/Assistants/#{assistant_sid}", params
+
+        chatbot = TwilioStub::DB.read("chatbot")
+        expect(chatbot[:development_stage]).to eq("in-production")
+      end
+    end
+
     describe "POST /:api_v/Accounts/:account_id/IncomingPhoneNumbers.json" do
       it "returns status 200" do
         TwilioStub::DB.write("chatbot", {})

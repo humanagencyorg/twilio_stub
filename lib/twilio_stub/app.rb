@@ -123,6 +123,24 @@ module TwilioStub
       { sid: sid, unique_name: unique_name }.to_json
     end
 
+    post "/v1/Assistants/:assistant_sid" do
+      sid = params[:assistant_sid]
+      development_stage = params["DevelopmentStage"]
+
+      DB.write(
+        "chatbot",
+        assistant_sid: sid,
+        development_stage: development_stage,
+      )
+
+      status 200
+
+      {
+        sid: sid,
+        development_stage: "in-production",
+      }.to_json
+    end
+
     post "/:api_version/Accounts/:account_id/IncomingPhoneNumbers.json" do
       phone_number = Faker::PhoneNumber.cell_phone
       phone_number_sid = "PN" + Faker::Crypto.md5
