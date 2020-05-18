@@ -33,6 +33,7 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(messages.first[:author]).to eq("bot")
       expect(messages.first[:sid].length).to eq(8)
 
+    ensure
       # Clean up
       TwilioStub::DB.clear_all
     end
@@ -68,6 +69,7 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(db_dialog_sid.length).to eq(12)
       expect(db_task).to eq(schema_task)
 
+    ensure
       TwilioStub::DB.clear_all
     end
 
@@ -121,6 +123,7 @@ RSpec.describe TwilioStub::DialogResolver do
 
         expect(db_task).to eq(block_task)
 
+      ensure
         # Clean up
         TwilioStub::DB.clear_all
       end
@@ -186,6 +189,7 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(task.sleeps.count).to eq(1)
       expect(task.sleeps).to eq([0.5])
 
+    ensure
       # Clean up
       TwilioStub::DB.clear_all
     end
@@ -264,6 +268,108 @@ RSpec.describe TwilioStub::DialogResolver do
       messages = db_messages.map { |d| d[:body] }
       expect(messages).to eq(expected_messages)
 
+    ensure
+      # Clean up
+      TwilioStub::DB.clear_all
+    end
+
+    it "passed the correct url and body to the callback server" do
+      customer_id = "fake_custom_id"
+      task = fake_task_stub.new
+      channel_name = "fake"
+      messages_key = "channel_fake_messages"
+      expected_url = "http://fakeurl.com"
+      expected_headers = {
+        "Accept" => "*/*",
+        "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+        "Content-Type" => "application/x-www-form-urlencoded",
+        "Host" => "fakeurl.com",
+        "User-Agent" => "Ruby",
+      }
+      stub_request(:post, expected_url).
+        to_return(
+          status: 200,
+          body: { "actions" => [{ "say" => "thank you" }] }.to_json,
+          headers: {},
+        )
+      write_message = message_writer(
+        key: messages_key,
+        author: customer_id,
+      )
+      expected_messages = [
+        "What is your answer?",
+        "test answer",
+        "thank you",
+      ]
+      schema = {
+        "tasks" => [
+          {
+            "uniqueName" => "greeting",
+            "actions" => {
+              "actions" => [
+                { "redirect" => "task://block" },
+              ],
+            },
+          },
+          "uniqueName" => "block",
+          "actions" => {
+            "actions" => [
+              "collect" => {
+                "questions" => [
+                  {
+                    "question" => "What is your answer?",
+                    "name" => "other_answer",
+                  },
+                ],
+                "on_complete" => {
+                  "redirect" => {
+                    "uri" => expected_url,
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      }
+
+      TwilioStub::DB.write("schema", schema)
+      TwilioStub::DB.write(messages_key, [])
+
+      # Execution
+      described_class.new(channel_name, task).call
+      write_message.("test answer")
+      described_class.new(channel_name, task).call
+
+      # Expectation
+      db_messages = TwilioStub::DB.read(messages_key)
+      dialog_sid = TwilioStub::DB.read(
+        "channel_#{channel_name}_dialog_sid",
+      )
+
+      expected_body = {
+        DialogueSid: dialog_sid,
+        CurrentInput: "test answer",
+        Memory: {
+          "twilio" => {
+            "collected_data" => {
+              "data_collect" => {
+                "answers" => {
+                  "other_answer" => { "answer" => "test answer" },
+                },
+              },
+            },
+          },
+        }.to_json,
+      }
+
+      expect(WebMock).to have_requested(:post, expected_url).
+        with(body: URI.encode_www_form(expected_body),
+             headers: expected_headers)
+
+      messages = db_messages.map { |d| d[:body] }
+      expect(messages).to eq(expected_messages)
+
+    ensure
       # Clean up
       TwilioStub::DB.clear_all
     end
@@ -328,6 +434,7 @@ RSpec.describe TwilioStub::DialogResolver do
         with(
           body: {
             "DialogueSid" => /.*/,
+            "CurrentInput" => /.*/,
             "Memory" => {
               "twilio" => {
                 "collected_data" => {
@@ -384,6 +491,7 @@ RSpec.describe TwilioStub::DialogResolver do
 
       expect(task.sleeps).to eq(Array.new(4, 0.5))
 
+    ensure
       # Clean up
       TwilioStub::DB.clear_all
     end
@@ -476,6 +584,7 @@ RSpec.describe TwilioStub::DialogResolver do
             with(
               body: {
                 "DialogueSid" => /.*/,
+                "CurrentInput" => /.*/,
                 "Memory" => {
                   "twilio" => {
                     "collected_data" => {
@@ -533,6 +642,7 @@ RSpec.describe TwilioStub::DialogResolver do
 
           expect(task.sleeps).to eq(Array.new(6, 0.5))
 
+        ensure
           # Clean up
           TwilioStub::DB.clear_all
         end
@@ -686,6 +796,7 @@ RSpec.describe TwilioStub::DialogResolver do
             with(
               body: {
                 "DialogueSid" => /.*/,
+                "CurrentInput" => /.*/,
                 "Memory" => {
                   "twilio" => {
                     "collected_data" => {
@@ -778,6 +889,7 @@ RSpec.describe TwilioStub::DialogResolver do
 
           expect(task.sleeps).to eq(Array.new(19, 0.5))
 
+        ensure
           # Clean up
           TwilioStub::DB.clear_all
         end
@@ -900,6 +1012,7 @@ RSpec.describe TwilioStub::DialogResolver do
 
       expect(task.sleeps).to eq(Array.new(2, 0.5))
 
+    ensure
       # Clean up
       TwilioStub::DB.clear_all
     end
@@ -1023,6 +1136,7 @@ RSpec.describe TwilioStub::DialogResolver do
 
         expect(task.sleeps).to eq(Array.new(3, 0.5))
 
+      ensure
         # Clean up
         TwilioStub::DB.clear_all
       end
