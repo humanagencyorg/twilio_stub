@@ -32,10 +32,6 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(messages.first[:body]).to eq("hello")
       expect(messages.first[:author]).to eq("bot")
       expect(messages.first[:sid].length).to eq(8)
-
-    ensure
-      # Clean up
-      TwilioStub::DB.clear_all
     end
 
     it "writes dialog_sid and task to db" do
@@ -68,9 +64,6 @@ RSpec.describe TwilioStub::DialogResolver do
       db_task = TwilioStub::DB.read("channel_fake_task")
       expect(db_dialog_sid.length).to eq(12)
       expect(db_task).to eq(schema_task)
-
-    ensure
-      TwilioStub::DB.clear_all
     end
 
     context "when greeting contains redirect" do
@@ -122,10 +115,6 @@ RSpec.describe TwilioStub::DialogResolver do
         expect(messages[1][:sid].length).to eq(8)
 
         expect(db_task).to eq(block_task)
-
-      ensure
-        # Clean up
-        TwilioStub::DB.clear_all
       end
     end
   end
@@ -188,10 +177,6 @@ RSpec.describe TwilioStub::DialogResolver do
 
       expect(task.sleeps.count).to eq(1)
       expect(task.sleeps).to eq([0.5])
-
-    ensure
-      # Clean up
-      TwilioStub::DB.clear_all
     end
 
     it "collects results" do
@@ -267,10 +252,6 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(db_messages.count).to eq(5)
       messages = db_messages.map { |d| d[:body] }
       expect(messages).to eq(expected_messages)
-
-    ensure
-      # Clean up
-      TwilioStub::DB.clear_all
     end
 
     it "passed the correct url and body to the callback server" do
@@ -368,10 +349,6 @@ RSpec.describe TwilioStub::DialogResolver do
 
       messages = db_messages.map { |d| d[:body] }
       expect(messages).to eq(expected_messages)
-
-    ensure
-      # Clean up
-      TwilioStub::DB.clear_all
     end
 
     it "sends results and react to webhook" do
@@ -490,17 +467,11 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(messages).to eq(expected_messages)
 
       expect(task.sleeps).to eq(Array.new(4, 0.5))
-
-    ensure
-      # Clean up
-      TwilioStub::DB.clear_all
     end
 
     context "when collect question contains validation" do
       context "whan contain allowed_values" do
         it "validates result by allowed_values list" do
-          TwilioStub::DB.clear_all
-
           customer_id = "fake_custom_id"
           task = fake_task_stub.new
           channel_name = "fake"
@@ -641,16 +612,12 @@ RSpec.describe TwilioStub::DialogResolver do
           expect(messages).to eq(expected_messages)
 
           expect(task.sleeps).to eq(Array.new(6, 0.5))
-
-        ensure
-          # Clean up
-          TwilioStub::DB.clear_all
         end
       end
 
       context "when validated by type" do
         it "validates by types" do
-          TwilioStub::DB.clear_all
+          
           customer_id = "fake_custom_id"
           task = fake_task_stub.new
           channel_name = "fake"
@@ -888,10 +855,6 @@ RSpec.describe TwilioStub::DialogResolver do
           expect(messages).to eq(expected_messages)
 
           expect(task.sleeps).to eq(Array.new(19, 0.5))
-
-        ensure
-          # Clean up
-          TwilioStub::DB.clear_all
         end
       end
     end
@@ -1011,10 +974,6 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(messages).to eq(expected_messages)
 
       expect(task.sleeps).to eq(Array.new(2, 0.5))
-
-    ensure
-      # Clean up
-      TwilioStub::DB.clear_all
     end
 
     context "when option is not found" do
@@ -1135,10 +1094,6 @@ RSpec.describe TwilioStub::DialogResolver do
         expect(messages).to eq(expected_messages)
 
         expect(task.sleeps).to eq(Array.new(3, 0.5))
-
-      ensure
-        # Clean up
-        TwilioStub::DB.clear_all
       end
     end
   end
