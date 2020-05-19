@@ -247,8 +247,11 @@ module TwilioStub
         [k, { answer: v }]
       end.to_h
 
+      current_input = read_data("messages").last.dig(:body)
+
       body = {
         DialogueSid: dialog_sid,
+        CurrentInput: current_input,
         Memory: {
           twilio: {
             collected_data: {
