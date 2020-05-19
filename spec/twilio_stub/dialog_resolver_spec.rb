@@ -617,7 +617,6 @@ RSpec.describe TwilioStub::DialogResolver do
 
       context "when validated by type" do
         it "validates by types" do
-          
           customer_id = "fake_custom_id"
           task = fake_task_stub.new
           channel_name = "fake"
