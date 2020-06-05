@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    twilio_stub (0.1.4)
+    twilio_stub (0.1.5)
       async (~> 1.26)
       capybara
       faker (~> 2.11)
@@ -35,7 +35,7 @@ GEM
       safe_yaml (~> 1.0.0)
     diff-lcs (1.3)
     docile (1.3.2)
-    faker (2.11.0)
+    faker (2.12.0)
       i18n (>= 1.6, < 2)
     hashdiff (1.0.1)
     i18n (1.8.2)

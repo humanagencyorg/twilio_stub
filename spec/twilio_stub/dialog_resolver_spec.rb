@@ -254,101 +254,202 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(messages).to eq(expected_messages)
     end
 
-    it "passed the correct url and body to the callback server" do
-      customer_id = "fake_custom_id"
-      task = fake_task_stub.new
-      channel_name = "fake"
-      messages_key = "channel_fake_messages"
-      expected_url = "http://fakeurl.com"
-      expected_headers = {
-        "Accept" => "*/*",
-        "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
-        "Content-Type" => "application/x-www-form-urlencoded",
-        "Host" => "fakeurl.com",
-        "User-Agent" => "Ruby",
-      }
-      stub_request(:post, expected_url).
-        to_return(
-          status: 200,
-          body: { "actions" => [{ "say" => "thank you" }] }.to_json,
-          headers: {},
+    describe "data collection block" do
+      it "passed the correct url and body to the callback server" do
+        customer_id = "fake_custom_id"
+        task = fake_task_stub.new
+        channel_name = "fake"
+        messages_key = "channel_fake_messages"
+        expected_url = "http://fakeurl.com"
+        expected_headers = {
+          "Accept" => "*/*",
+          "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+          "Content-Type" => "application/x-www-form-urlencoded",
+          "Host" => "fakeurl.com",
+          "User-Agent" => "Ruby",
+        }
+        stub_request(:post, expected_url).
+          to_return(
+            status: 200,
+            body: { "actions" => [{ "say" => "thank you" }] }.to_json,
+            headers: {},
+          )
+        write_message = message_writer(
+          key: messages_key,
+          author: customer_id,
         )
-      write_message = message_writer(
-        key: messages_key,
-        author: customer_id,
-      )
-      expected_messages = [
-        "What is your answer?",
-        "test answer",
-        "thank you",
-      ]
-      schema = {
-        "tasks" => [
-          {
-            "uniqueName" => "greeting",
+        expected_messages = [
+          "What is your answer?",
+          "test answer",
+          "thank you",
+        ]
+        schema = {
+          "tasks" => [
+            {
+              "uniqueName" => "greeting",
+              "actions" => {
+                "actions" => [
+                  { "redirect" => "task://block" },
+                ],
+              },
+            },
+            "uniqueName" => "block",
             "actions" => {
               "actions" => [
-                { "redirect" => "task://block" },
+                "collect" => {
+                  "questions" => [
+                    {
+                      "question" => "What is your answer?",
+                      "name" => "other_answer",
+                    },
+                  ],
+                  "on_complete" => {
+                    "redirect" => {
+                      "uri" => expected_url,
+                    },
+                  },
+                },
               ],
             },
-          },
-          "uniqueName" => "block",
-          "actions" => {
-            "actions" => [
-              "collect" => {
-                "questions" => [
-                  {
-                    "question" => "What is your answer?",
-                    "name" => "other_answer",
+          ],
+        }
+
+        TwilioStub::DB.write("schema", schema)
+        TwilioStub::DB.write(messages_key, [])
+
+        # Execution
+        described_class.new(channel_name, task).call
+        write_message.("test answer")
+        described_class.new(channel_name, task).call
+
+        # Expectation
+        db_messages = TwilioStub::DB.read(messages_key)
+        dialog_sid = TwilioStub::DB.read(
+          "channel_#{channel_name}_dialog_sid",
+        )
+
+        expected_body = {
+          DialogueSid: dialog_sid,
+          CurrentInput: "test answer",
+          Memory: {
+            "twilio" => {
+              "collected_data" => {
+                "data_collect" => {
+                  "answers" => {
+                    "other_answer" => { "answer" => "test answer" },
                   },
-                ],
-                "on_complete" => {
-                  "redirect" => {
-                    "uri" => expected_url,
-                  },
-                },
-              },
-            ],
-          },
-        ],
-      }
-
-      TwilioStub::DB.write("schema", schema)
-      TwilioStub::DB.write(messages_key, [])
-
-      # Execution
-      described_class.new(channel_name, task).call
-      write_message.("test answer")
-      described_class.new(channel_name, task).call
-
-      # Expectation
-      db_messages = TwilioStub::DB.read(messages_key)
-      dialog_sid = TwilioStub::DB.read(
-        "channel_#{channel_name}_dialog_sid",
-      )
-
-      expected_body = {
-        DialogueSid: dialog_sid,
-        CurrentInput: "test answer",
-        Memory: {
-          "twilio" => {
-            "collected_data" => {
-              "data_collect" => {
-                "answers" => {
-                  "other_answer" => { "answer" => "test answer" },
                 },
               },
             },
-          },
-        }.to_json,
-      }
+          }.to_json,
+        }
 
-      expect(WebMock).to have_requested(:post, expected_url).
-        with(body: URI.encode_www_form(expected_body),
-             headers: expected_headers)
+        expect(WebMock).to have_requested(:post, expected_url).
+          with(body: URI.encode_www_form(expected_body),
+               headers: expected_headers)
 
-      messages = db_messages.map { |d| d[:body] }
-      expect(messages).to eq(expected_messages)
+        messages = db_messages.map { |d| d[:body] }
+        expect(messages).to eq(expected_messages)
+      end
+    end
+
+    describe "multiple choice collection block" do
+      it "passed the correct url and body to the callback server" do
+        customer_id = "fake_custom_id"
+        task = fake_task_stub.new
+        channel_name = "fake"
+        messages_key = "channel_fake_messages"
+        expected_url = "http://fakeurl.com"
+        expected_headers = {
+          "Accept" => "*/*",
+          "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+          "Content-Type" => "application/x-www-form-urlencoded",
+          "Host" => "fakeurl.com",
+          "User-Agent" => "Ruby",
+        }
+        stub_request(:post, expected_url).
+          to_return(
+            status: 200,
+            body: { "actions" => [{ "say" => "thank you" }] }.to_json,
+            headers: {},
+          )
+        write_message = message_writer(
+          key: messages_key,
+          author: customer_id,
+        )
+        expected_messages = [
+          "What is your answer?",
+          "A",
+          "thank you",
+        ]
+        schema = {
+          "tasks" => [
+            {
+              "uniqueName" => "greeting",
+              "actions" => {
+                "actions" => [
+                  { "redirect" => "task://block_1" },
+                ],
+              },
+            },
+            "uniqueName" => "block_1",
+            "actions" => {
+              "actions" => [
+                "collect" => {
+                  "questions" => [
+                    {
+                      "question" => "What is your answer?",
+                      "name" => "block_1_multiple_choice_answer",
+                    },
+                  ],
+                  "on_complete" => {
+                    "redirect" => {
+                      "uri" => expected_url,
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        }
+
+        TwilioStub::DB.write("schema", schema)
+        TwilioStub::DB.write(messages_key, [])
+
+        # Execution
+        described_class.new(channel_name, task).call
+        write_message.("A")
+        described_class.new(channel_name, task).call
+
+        # Expectation
+        db_messages = TwilioStub::DB.read(messages_key)
+        dialog_sid = TwilioStub::DB.read(
+          "channel_#{channel_name}_dialog_sid",
+        )
+
+        expected_body = {
+          DialogueSid: dialog_sid,
+          CurrentInput: "A",
+          Memory: {
+            "twilio" => {
+              "collected_data" => {
+                "block_1_multiple_choice_collect" => {
+                  "answers" => {
+                    "block_1_multiple_choice_answer" => { "answer" => "A" },
+                  },
+                },
+              },
+            },
+          }.to_json,
+        }
+
+        expect(WebMock).to have_requested(:post, expected_url).
+          with(body: URI.encode_www_form(expected_body),
+               headers: expected_headers)
+
+        messages = db_messages.map { |d| d[:body] }
+        expect(messages).to eq(expected_messages)
+      end
     end
 
     it "sends results and react to webhook" do

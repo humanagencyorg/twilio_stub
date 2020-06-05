@@ -249,16 +249,19 @@ module TwilioStub
 
       current_input = read_data("messages").last.dig(:body)
 
+      key = collect_key_from_answer(body_results)
+      collect_hash = {
+        "#{key}": {
+          answers: body_results,
+        },
+      }
+
       body = {
         DialogueSid: dialog_sid,
         CurrentInput: current_input,
         Memory: {
           twilio: {
-            collected_data: {
-              data_collect: {
-                answers: body_results,
-              },
-            },
+            collected_data: collect_hash,
           },
         }.to_json,
       }
@@ -311,6 +314,18 @@ module TwilioStub
 
     def random_message_string
       (0...8).map { ("a".."z").to_a[rand(26)] }.join
+    end
+
+    def collect_key_from_answer(answer)
+      name_parts = answer.keys.first.split("_")
+      if name_parts[0] == "block"
+        name_parts.pop
+        name_parts.push("collect")
+        key = name_parts.join("_")
+      else
+        key = "data_collect"
+      end
+      key
     end
   end
 end
