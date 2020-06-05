@@ -261,13 +261,6 @@ RSpec.describe TwilioStub::DialogResolver do
         channel_name = "fake"
         messages_key = "channel_fake_messages"
         expected_url = "http://fakeurl.com"
-        expected_headers = {
-          "Accept" => "*/*",
-          "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
-          "Content-Type" => "application/x-www-form-urlencoded",
-          "Host" => "fakeurl.com",
-          "User-Agent" => "Ruby",
-        }
         stub_request(:post, expected_url).
           to_return(
             status: 200,
@@ -278,11 +271,6 @@ RSpec.describe TwilioStub::DialogResolver do
           key: messages_key,
           author: customer_id,
         )
-        expected_messages = [
-          "What is your answer?",
-          "test answer",
-          "thank you",
-        ]
         schema = {
           "tasks" => [
             {
@@ -293,7 +281,7 @@ RSpec.describe TwilioStub::DialogResolver do
                 ],
               },
             },
-            "uniqueName" => "data_collection_task",
+            "uniqueName" => "block",
             "actions" => {
               "actions" => [
                 "collect" => {
@@ -328,6 +316,13 @@ RSpec.describe TwilioStub::DialogResolver do
           "channel_#{channel_name}_dialog_sid",
         )
 
+        expected_headers = {
+          "Accept" => "*/*",
+          "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+          "Content-Type" => "application/x-www-form-urlencoded",
+          "Host" => "fakeurl.com",
+          "User-Agent" => "Ruby",
+        }
         expected_body = {
           DialogueSid: dialog_sid,
           CurrentInput: "test answer",
@@ -343,6 +338,11 @@ RSpec.describe TwilioStub::DialogResolver do
             },
           }.to_json,
         }
+        expected_messages = [
+          "What is your answer?",
+          "test answer",
+          "thank you",
+        ]
 
         expect(WebMock).to have_requested(:post, expected_url).
           with(body: URI.encode_www_form(expected_body),
