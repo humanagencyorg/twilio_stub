@@ -254,7 +254,7 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(messages).to eq(expected_messages)
     end
 
-    describe "data collection block" do
+    describe "data collection" do
       it "passed the correct url and body to the callback server" do
         customer_id = "fake_custom_id"
         task = fake_task_stub.new
@@ -293,7 +293,7 @@ RSpec.describe TwilioStub::DialogResolver do
                 ],
               },
             },
-            "uniqueName" => "block",
+            "uniqueName" => "data_collection_task",
             "actions" => {
               "actions" => [
                 "collect" => {
