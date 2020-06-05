@@ -249,7 +249,9 @@ module TwilioStub
 
       current_input = read_data("messages").last.dig(:body)
 
-      key = collect_key_from_answer(body_results)
+      question_name = read_data("action").dig("collect", "questions").first.
+        dig("name")
+      key = collect_key_from_question_name(question_name)
       collect_hash = {
         "#{key}": {
           answers: body_results,
@@ -316,9 +318,9 @@ module TwilioStub
       (0...8).map { ("a".."z").to_a[rand(26)] }.join
     end
 
-    def collect_key_from_answer(answer)
-      name_parts = answer.keys.first.split("_")
-      if name_parts[0] == "block"
+    def collect_key_from_question_name(question_name)
+      name_parts = question_name.split("_")
+      if name_parts.first == "block"
         name_parts.pop
         name_parts.push("collect")
         key = name_parts.join("_")

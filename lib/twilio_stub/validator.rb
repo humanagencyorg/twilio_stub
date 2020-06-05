@@ -21,7 +21,7 @@ module TwilioStub
       "Twilio.YES_NO" => YES_NO,
     }.freeze
 
-    def initialize(value, schema, type = nil)
+    def initialize(value, schema, type)
       @value = value
       @schema = schema
       @type = type
@@ -33,7 +33,6 @@ module TwilioStub
 
     def valid?
       return validate_by_schema if schema_includes_list?
-      return true if @type.nil?
 
       matcher = MATCHERS[@type]
 
