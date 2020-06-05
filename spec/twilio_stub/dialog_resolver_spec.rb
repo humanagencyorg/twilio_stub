@@ -399,7 +399,7 @@ RSpec.describe TwilioStub::DialogResolver do
                   "questions" => [
                     {
                       "question" => "What is your answer?",
-                      "name" => "block_1_multiple_choice_answer",
+                      "name" => "multiple_choice_question",
                     },
                   ],
                   "on_complete" => {
@@ -433,9 +433,9 @@ RSpec.describe TwilioStub::DialogResolver do
           Memory: {
             "twilio" => {
               "collected_data" => {
-                "block_1_multiple_choice_collect" => {
+                "data_collect" => {
                   "answers" => {
-                    "block_1_multiple_choice_answer" => { "answer" => "A" },
+                    "multiple_choice_question" => { "answer" => "A" },
                   },
                 },
               },
