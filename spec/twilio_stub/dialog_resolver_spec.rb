@@ -1095,6 +1095,66 @@ RSpec.describe TwilioStub::DialogResolver do
         expect(task.sleeps).to eq(Array.new(3, 0.5))
       end
     end
+
+    context "when show action is present" do
+      it "returns promise with media url" do
+        task = fake_task_stub.new
+        channel_name = "fake"
+        messages_key = "channel_fake_messages"
+        public_id = "public_id_123"
+        parent_url = "some.url/fake.jpg"
+        TwilioStub.media_mapper[public_id] = parent_url
+        media_url = "http://res.cloudinary.com/hyz4jwpo6/"\
+          "image/upload/c_lfill,h_720,q_auto:best/#{public_id}.jpg"
+
+        schema = {
+          "tasks" => [
+            {
+              "uniqueName" => "greeting",
+              "actions" => {
+                "actions" => [
+                  { "say" => "hello" },
+                  { "redirect" => "task://block_1" },
+                ],
+              },
+            },
+            {
+              "uniqueName" => "block_1",
+              "actions" => {
+                "actions" => [
+                  {
+                    "show" => {
+                      "images" => [{
+                        "url" => media_url,
+                      }],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        }
+
+        TwilioStub::DB.write("schema", schema)
+        TwilioStub::DB.write(messages_key, [])
+
+        # Execution
+        described_class.new(channel_name, task).call
+
+        # Expectation
+        messages = TwilioStub::DB.read(messages_key)
+        expect(messages.count).to eq(2)
+        first_message = messages.first
+        second_message = messages[1]
+
+        expect(first_message[:body]).to eq("hello")
+        expect(first_message[:author]).to eq("bot")
+        expect(first_message[:sid].length).to eq(8)
+        expect(second_message[:mediaUrl]).to eq(parent_url)
+        expect(second_message[:author]).to eq("bot")
+        expect(second_message[:sid].length).to eq(8)
+      end
+    end
   end
 
   def fake_task_stub
