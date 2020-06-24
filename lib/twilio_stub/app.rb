@@ -108,7 +108,7 @@ module TwilioStub
     post "/v1/Assistants" do
       sid = "UA" + Faker::Crypto.md5
       friendly_name = params["FriendlyName"]
-      unique_name = sid + "-" + Faker::Code.imei
+      unique_name = params["UniqueName"]
 
       DB.write(
         "chatbot",

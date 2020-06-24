@@ -269,14 +269,13 @@ RSpec.describe TwilioStub::App do
       it "writes assistant data to db" do
         friendly_name = "X AE A-12"
         md5 = "123"
-        imei = "456"
         sid = "UA" + md5
-        unique_name = sid + "-" + imei
+        unique_name = friendly_name + "1"
         params = {
           "FriendlyName": friendly_name,
+          "UniqueName": unique_name,
         }
 
-        allow(Faker::Code).to receive(:imei).and_return(imei)
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
 
         post "/v1/Assistants", params
@@ -291,14 +290,13 @@ RSpec.describe TwilioStub::App do
       it "returns assistant_sid and unique name" do
         friendly_name = "X AE A-12"
         md5 = "123"
-        imei = "456"
         sid = "UA" + md5
-        unique_name = sid + "-" + imei
+        unique_name = friendly_name + "1"
         params = {
           "FriendlyName": friendly_name,
+          "UniqueName": unique_name,
         }
 
-        allow(Faker::Code).to receive(:imei).and_return(imei)
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
 
         post "/v1/Assistants", params
