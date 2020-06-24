@@ -48,6 +48,8 @@ module TwilioStub
         case get_action_type(action)
         when "say"
           write_message(action["say"])
+        when "show"
+          write_media(action)
         when "redirect"
           handle_redirect_action(action)
           break
@@ -290,12 +292,33 @@ module TwilioStub
     end
 
     def write_message(message)
-      messages = read_data("messages")
-      messages.push(
+      message = {
         body: message,
         author: "bot",
         sid: random_message_string,
-      )
+      }
+
+      push_message(message)
+    end
+
+    def write_media(action)
+      url = action["show"]["images"].first["url"]
+      body = action["show"]["body"]
+      public_id = url.split("/").last.split(".").first
+      parent_url = TwilioStub.media_mapper[public_id]
+      message = {
+        body: body,
+        mediaUrl: parent_url,
+        author: "bot",
+        sid: random_message_string,
+      }
+
+      push_message(message)
+    end
+
+    def push_message(message)
+      messages = read_data("messages")
+      messages.push(message)
 
       write_data("messages", messages)
       @async_task.sleep(0.5)

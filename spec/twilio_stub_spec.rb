@@ -4,6 +4,14 @@ require "twilio_stub/app"
 require "twilio_stub/db"
 
 RSpec.describe TwilioStub do
+  describe ".media_mapper" do
+    it "allows to set and get media_mapper keys" do
+      TwilioStub.media_mapper[:foo] = :bar
+
+      expect(TwilioStub.media_mapper[:foo]).to eq(:bar)
+    end
+  end
+
   describe ".boot" do
     it "calls App.boot_once" do
       allow(TwilioStub::App).to receive(:boot_once)

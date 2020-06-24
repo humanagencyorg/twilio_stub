@@ -24,4 +24,8 @@ module TwilioStub
   def self.clear_store
     DB.clear_all
   end
+
+  def self.media_mapper
+    @media_mapper ||= {}
+  end
 end
