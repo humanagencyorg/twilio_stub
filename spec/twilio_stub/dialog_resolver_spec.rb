@@ -1124,6 +1124,7 @@ RSpec.describe TwilioStub::DialogResolver do
                 "actions" => [
                   {
                     "show" => {
+                      "body" => "Image title",
                       "images" => [{
                         "url" => media_url,
                       }],
@@ -1151,6 +1152,7 @@ RSpec.describe TwilioStub::DialogResolver do
         expect(first_message[:author]).to eq("bot")
         expect(first_message[:sid].length).to eq(8)
         expect(second_message[:mediaUrl]).to eq(parent_url)
+        expect(second_message[:body]).to eq("Image title")
         expect(second_message[:author]).to eq("bot")
         expect(second_message[:sid].length).to eq(8)
       end
