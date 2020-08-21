@@ -325,7 +325,7 @@ RSpec.describe TwilioStub::App do
         params = { PhoneNumberSid: phone_number_sid }
 
         post "/v1/Services/MSSID/PhoneNumbers", params
-        
+
         expect(last_response.status).to eq(200)
         response = JSON.parse(last_response.body)
         expect(response["sid"]).to eq(phone_number_sid)
