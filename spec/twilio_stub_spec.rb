@@ -63,4 +63,32 @@ RSpec.describe TwilioStub do
       expect(TwilioStub::DB).to have_received(:clear_all)
     end
   end
+
+  describe ".sent_sms_status_callback" do
+    it "makes request to messaging service callback url" do
+      sid = "fake_sid"
+      status = "fake_status"
+      callback_url = "http://fake_url.com"
+      chatbot = {
+        messaging_service: {
+          callback_url: callback_url,
+        },
+      }
+      expected_body = {
+        MessageSid: sid,
+        MessageStatus: status,
+      }
+      allow(TwilioStub::DB).
+        to receive(:read).
+        with("chatbot").
+        and_return(chatbot)
+      stub_request(:post, callback_url).
+        to_return(status: 200)
+
+      described_class.sent_sms_status_callback(sid: sid, status: status)
+
+      expect(WebMock).to have_requested(:post, callback_url).
+        with(body: expected_body)
+    end
+  end
 end
