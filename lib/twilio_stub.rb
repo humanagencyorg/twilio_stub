@@ -28,4 +28,17 @@ module TwilioStub
   def self.media_mapper
     @media_mapper ||= {}
   end
+
+  def self.sent_sms_status_callback(sid:, status:)
+    chatbot = DB.read("chatbot")
+    ms = chatbot[:messaging_service]
+
+    Net::HTTP.post_form(
+      URI(ms[:callback_url]),
+      {
+        MessageSid: sid,
+        MessageStatus: status,
+      },
+    )
+  end
 end

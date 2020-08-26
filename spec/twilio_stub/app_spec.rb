@@ -259,6 +259,79 @@ RSpec.describe TwilioStub::App do
       end
     end
 
+    describe "POST /v2/Services/:assistant_id/Channels/:channel_sid/Webhooks" do
+      it "returns status and empty json" do
+        post "/v2/Services/AC123/Channels/CH123/Webhooks"
+
+        expect(last_response.status).to eq(200)
+        expect(JSON.parse(last_response.body)).to eq({})
+      end
+    end
+
+    describe "POST /v1/Services" do
+      it "updates chatbot with messaging service" do
+        sid_md = "fake_sid_md"
+        full_sid = "MG#{sid_md}"
+        friendly_name = "fake_friendly_name"
+        callback_url = "fake_callback_url"
+        inbound_url = "fake_inbound_url"
+        params = {
+          FriendlyName: friendly_name,
+          StatusCallback: callback_url,
+          InboundRequestUrl: inbound_url,
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(sid_md)
+
+        TwilioStub::DB.write("chatbot", {})
+
+        post "/v1/Services", params
+
+        chatbot = TwilioStub::DB.read("chatbot")
+        expect(chatbot).to have_key(:messaging_service)
+        ms = chatbot[:messaging_service]
+        expect(ms[:friendly_name]).to eq(friendly_name)
+        expect(ms[:sid]).to eq(full_sid)
+        expect(ms[:inbound_url]).to eq(inbound_url)
+        expect(ms[:callback_url]).to eq(callback_url)
+      end
+
+      it "returns messaging service sid and friendly_name" do
+        sid_md = "fake_sid_md"
+        full_sid = "MG#{sid_md}"
+        friendly_name = "fake_friendly_name"
+        callback_url = "fake_callback_url"
+        inbound_url = "fake_inbound_url"
+        params = {
+          FriendlyName: friendly_name,
+          StatusCallback: callback_url,
+          InboundRequestUrl: inbound_url,
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(sid_md)
+
+        TwilioStub::DB.write("chatbot", {})
+
+        post "/v1/Services", params
+
+        expect(last_response.status).to eq(200)
+        response = JSON.parse(last_response.body)
+        expect(response["sid"]).to eq(full_sid)
+        expect(response["friendly_name"]).to eq(friendly_name)
+      end
+    end
+
+    describe "POST /v1/Services/:ms_sid/PhoneNumbers" do
+      it "returns phone number sid from params" do
+        phone_number_sid = "fake_phone_number_sid"
+        params = { PhoneNumberSid: phone_number_sid }
+
+        post "/v1/Services/MSSID/PhoneNumbers", params
+
+        expect(last_response.status).to eq(200)
+        response = JSON.parse(last_response.body)
+        expect(response["sid"]).to eq(phone_number_sid)
+      end
+    end
+
     describe "POST /v1/Assistants" do
       it "returns 200" do
         post "/v1/Assistants"
@@ -311,41 +384,46 @@ RSpec.describe TwilioStub::App do
     describe "POST /v1/Assistants/:assistant_sid" do
       it "returns 200" do
         assistant_sid = "AC123"
+        development_stage = "fake_dev_stage"
         params = {
-          "DevelopmentStage": "in-production",
+          "DevelopmentStage": development_stage,
         }
+        TwilioStub::DB.write("chatbot", {})
 
         post "/v1/Assistants/#{assistant_sid}", params
 
         expect(last_response.status).to eq(200)
       end
 
-      it "returns the assistant hash (with DevelopmentStage)" do
+      it "returns the assistant hash" do
         assistant_sid = "AC123"
+        development_stage = "fake_dev_stage"
         params = {
-          "DevelopmentStage": "in-production",
+          "DevelopmentStage": development_stage,
         }
+        TwilioStub::DB.write("chatbot", {})
 
         post "/v1/Assistants/#{assistant_sid}", params
 
-        parsed = JSON.parse last_response.body
-        expect(parsed).to include(
+        parsed = JSON.parse(last_response.body)
+        expect(parsed).to eq(
           "sid" => assistant_sid,
-          "development_stage" => "in-production",
+          "development_stage" => development_stage,
         )
       end
 
       it "writes updated assistant data to db" do
         assistant_sid = "AC123"
+        development_stage = "fake_dev_stage"
         TwilioStub::DB.write("chatbot", {})
         params = {
-          "DevelopmentStage": "in-production",
+          "DevelopmentStage": development_stage,
         }
 
         post "/v1/Assistants/#{assistant_sid}", params
 
         chatbot = TwilioStub::DB.read("chatbot")
-        expect(chatbot[:development_stage]).to eq("in-production")
+        expect(chatbot[:development_stage]).to eq(development_stage)
       end
     end
 
@@ -360,34 +438,37 @@ RSpec.describe TwilioStub::App do
 
       it "writes phone number data to db" do
         md5 = "123"
-        phone_number = "4567"
+        phone_number = "+4567"
         phone_number_sid = "PN" + md5
 
         TwilioStub::DB.write("chatbot", {})
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).
-          to receive(:cell_phone).
+          to receive(:cell_phone_in_e164).
           and_return(phone_number)
 
         post "/v2/Accounts/123/IncomingPhoneNumbers.json"
 
         chatbot = TwilioStub::DB.read("chatbot")
 
-        expect(chatbot[:phone_number]).to eq(phone_number)
-        expect(chatbot[:phone_number_sid]).to eq(phone_number_sid)
+        expect(chatbot[:phone_numbers]).to be_an(Array)
+        expect(chatbot[:phone_numbers].count).to eq(1)
+        number = chatbot[:phone_numbers].first
+        expect(number[:phone_number]).to eq(phone_number)
+        expect(number[:phone_number_sid]).to eq(phone_number_sid)
       end
 
       it "returns phone number" do
         md5 = "123"
-        phone_number = "4567"
+        phone_number = "+4567"
         phone_number_sid = "PN" + md5
 
         TwilioStub::DB.write("chatbot", {})
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).
-          to receive(:cell_phone).
+          to receive(:cell_phone_in_e164).
           and_return(phone_number)
 
         post "/v2/Accounts/123/IncomingPhoneNumbers.json"
@@ -396,6 +477,98 @@ RSpec.describe TwilioStub::App do
 
         expect(response["phone_number"]).to eq(phone_number)
         expect(response["sid"]).to eq(phone_number_sid)
+      end
+    end
+
+    describe "POST /:api_version/Accounts/:assistant_sid/Messages.json" do
+      it "returns message sid" do
+        assistant_sid = "fake_assistant_sid"
+        body = "fake_body"
+        message_service_sid = "fake_message_service_sid"
+        to = "fake_to"
+        sid = "fake_message_sid"
+        full_sid = "MS#{sid}"
+        params = {
+          Body: body,
+          MessagingServiceSid: message_service_sid,
+          To: to,
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(sid)
+
+        post "/v2/Accounts/#{assistant_sid}/Messages.json", params
+
+        expect(last_response.status).to eq(200)
+        response = JSON.parse(last_response.body)
+        expect(response["sid"]).to eq(full_sid)
+      end
+
+      it "saves sms message" do
+        assistant_sid = "fake_assistant_sid"
+        body = "fake_body"
+        message_service_sid = "fake_message_service_sid"
+        to = "fake_to"
+        sid = "fake_message_sid"
+        full_sid = "MS#{sid}"
+        params = {
+          Body: body,
+          MessagingServiceSid: message_service_sid,
+          To: to,
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(sid)
+
+        post "/v2/Accounts/#{assistant_sid}/Messages.json", params
+
+        message = TwilioStub::DB.read("sms_messages").first
+        expect(message[:sid]).to eq(full_sid)
+        expect(message[:body]).to eq(body)
+        expect(message[:ms_sid]).to eq(message_service_sid)
+        expect(message[:to]).to eq(to)
+        expect(message[:assistant_sid]).to eq(assistant_sid)
+      end
+
+      it "saves more than one message" do
+        assistant_sid = "fake_assistant_sid"
+        body1 = "fake_body"
+        message_service_sid1 = "fake_message_service_sid"
+        to1 = "fake_to"
+        sid1 = "fake_message_sid"
+        full_sid1 = "MS#{sid1}"
+        body2 = "fake_body_2"
+        message_service_sid2 = "fake_message_service_sid_2"
+        to2 = "fake_to_2"
+        sid2 = "fake_message_sid_2"
+        full_sid2 = "MS#{sid2}"
+        params1 = {
+          Body: body1,
+          MessagingServiceSid: message_service_sid1,
+          To: to1,
+        }
+        params2 = {
+          Body: body2,
+          MessagingServiceSid: message_service_sid2,
+          To: to2,
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(sid1, sid2)
+
+        post "/v2/Accounts/#{assistant_sid}/Messages.json", params1
+        post "/v2/Accounts/#{assistant_sid}/Messages.json", params2
+
+        messages = TwilioStub::DB.read("sms_messages")
+        expect(messages.count).to eq(2)
+        expect(messages.first).to eq(
+          sid: full_sid1,
+          body: body1,
+          ms_sid: message_service_sid1,
+          to: to1,
+          assistant_sid: assistant_sid,
+        )
+        expect(messages.last).to eq(
+          sid: full_sid2,
+          body: body2,
+          ms_sid: message_service_sid2,
+          to: to2,
+          assistant_sid: assistant_sid,
+        )
       end
     end
   end

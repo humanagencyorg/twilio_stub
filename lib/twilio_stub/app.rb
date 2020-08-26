@@ -105,6 +105,33 @@ module TwilioStub
       {}.to_json
     end
 
+    post "/v1/Services" do
+      sid = "MG" + Faker::Crypto.md5
+      friendly_name = params["FriendlyName"]
+      chatbot = DB.read("chatbot")
+      chatbot[:messaging_service] = {
+        sid: sid,
+        friendly_name: friendly_name,
+        callback_url: params["StatusCallback"],
+        inbound_url: params["InboundRequestUrl"],
+      }
+      DB.write("chatbot", chatbot)
+
+      content_type "application/json"
+      status 200
+
+      { sid: sid, friendly_name: friendly_name }.to_json
+    end
+
+    post "/v1/Services/:ms_sid/PhoneNumbers" do
+      content_type "application/json"
+      status 200
+
+      {
+        sid: params[:PhoneNumberSid],
+      }.to_json
+    end
+
     post "/v1/Assistants" do
       sid = "UA" + Faker::Crypto.md5
       friendly_name = params["FriendlyName"]
@@ -126,28 +153,30 @@ module TwilioStub
     post "/v1/Assistants/:assistant_sid" do
       sid = params[:assistant_sid]
       development_stage = params["DevelopmentStage"]
+      chatbot = DB.read("chatbot")
+      chatbot[:development_stage] = development_stage
 
-      DB.write(
-        "chatbot",
-        assistant_sid: sid,
-        development_stage: development_stage,
-      )
+      DB.write("chatbot", chatbot)
 
       status 200
 
       {
         sid: sid,
-        development_stage: "in-production",
+        development_stage: development_stage,
       }.to_json
     end
 
     post "/:api_version/Accounts/:account_id/IncomingPhoneNumbers.json" do
-      phone_number = Faker::PhoneNumber.cell_phone
+      Faker::Config.locale = "en-US"
+      phone_number = Faker::PhoneNumber.cell_phone_in_e164
       phone_number_sid = "PN" + Faker::Crypto.md5
 
       chatbot = DB.read("chatbot")
-      chatbot[:phone_number] = phone_number
-      chatbot[:phone_number_sid] = phone_number_sid
+      chatbot[:phone_numbers] ||= []
+      chatbot[:phone_numbers].push(
+        phone_number: phone_number,
+        phone_number_sid: phone_number_sid,
+      )
       DB.write("chatbot", chatbot)
 
       content_type "application/json"
@@ -156,6 +185,27 @@ module TwilioStub
       {
         sid: phone_number_sid,
         phone_number: phone_number,
+      }.to_json
+    end
+
+    post "/:api_version/Accounts/:assistant_sid/Messages.json" do
+      message_sid = "MS" + Faker::Crypto.md5
+      messages = DB.read("sms_messages")
+      messages ||= []
+      messages.push(
+        sid: message_sid,
+        body: params[:Body],
+        ms_sid: params[:MessagingServiceSid],
+        to: params[:To],
+        assistant_sid: params[:assistant_sid],
+      )
+      DB.write("sms_messages", messages)
+
+      content_type "application/json"
+      status 200
+
+      {
+        sid: message_sid,
       }.to_json
     end
   end

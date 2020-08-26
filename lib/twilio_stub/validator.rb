@@ -3,8 +3,8 @@ module TwilioStub
     FIRST_NAME = /^[A-Z]\w+$/.freeze
     LAST_NAME = /^[A-Z]\w+$/.freeze
     EMAIL = /^\w+@\w+\.\w{2,4}$/.freeze
-    CITY = /^(Kyiv)|(Odessa)|(Lviv)|(New\sYork)|(Saint\sLouis)|(Washington)$/.freeze # rubocop:disable Metrics/LineLength
-    COUNTRY = /^(Ukraine)|(USA)|(United\sStates\sof\sAmerica)|(Great\sBritain)$/.freeze # rubocop:disable Metrics/LineLength
+    CITY = /^(Kyiv)|(Odessa)|(Lviv)|(New\sYork)|(Saint\sLouis)|(Washington)$/.freeze # rubocop:disable Layout/LineLength
+    COUNTRY = /^(Ukraine)|(USA)|(United\sStates\sof\sAmerica)|(Great\sBritain)$/.freeze # rubocop:disable Layout/LineLength
     US_STATE = /^(MO)|(CA)|(NY)$/.freeze
     ZIP_CODE = /^\d{5,6}$/.freeze
     PHONE_NUMBER = /^\d{10}$/.freeze
