@@ -11,7 +11,7 @@ jobs:
       with:
         ruby-version: 2.6
     - run: ruby -v
-    - run: gem install rubocop
+    - run: gem install rubocop --version "=0.82"
     - name: rubocop
       run: rubocop
     - uses: actions/cache@v1
