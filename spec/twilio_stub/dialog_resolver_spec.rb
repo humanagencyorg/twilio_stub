@@ -546,12 +546,13 @@ RSpec.describe TwilioStub::DialogResolver do
             with(
               body: {
                 "ValidateFieldAnswer" => answer,
-              }.to_json,
+              },
               headers: {
                 "Accept" => "*/*",
                 "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
                 "Host" => "fakeurl.com",
                 "User-Agent" => "Ruby",
+                "Content-Type" => "application/x-www-form-urlencoded",
               },
             ).
             to_return(
@@ -655,12 +656,13 @@ RSpec.describe TwilioStub::DialogResolver do
             with(
               body: {
                 "ValidateFieldAnswer" => answer,
-              }.to_json,
+              },
               headers: {
                 "Accept" => "*/*",
                 "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
                 "Host" => "fakeurl.com",
                 "User-Agent" => "Ruby",
+                "Content-Type" => "application/x-www-form-urlencoded",
               },
             ).
             to_return(

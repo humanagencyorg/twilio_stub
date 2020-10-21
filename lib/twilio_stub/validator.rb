@@ -33,14 +33,14 @@ module TwilioStub
 
     def valid?
       if validated_by_webhook?
-        response = Net::HTTP.post(
+        response = Net::HTTP.post_form(
           URI(@schema["webhook"]["url"]),
-          { "ValidateFieldAnswer" => @value }.to_json,
+          { "ValidateFieldAnswer" => @value },
         )
 
         result = JSON.parse(response.body)["valid"]
 
-        return result == "true"
+        return result
       end
 
       return validate_by_schema if schema_includes_list?
