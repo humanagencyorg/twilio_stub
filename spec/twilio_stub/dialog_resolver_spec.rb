@@ -574,10 +574,8 @@ RSpec.describe TwilioStub::DialogResolver do
           described_class.new(channel_name, task).call
           write_message.(answer)
           described_class.new(channel_name, task).call
-          write_message.(answer)
-          described_class.new(channel_name, task).call
 
-          expect(twilio_request).to have_been_requested.twice
+          expect(twilio_request).to have_been_requested.once
           expect(on_complete_stub).not_to have_been_requested.once
         end
 
