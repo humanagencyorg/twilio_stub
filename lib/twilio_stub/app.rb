@@ -106,7 +106,7 @@ module TwilioStub
     end
 
     post "/v1/Services" do
-      sid = "MG" + Faker::Crypto.md5
+      sid = "MG#{Faker::Crypto.md5}"
       friendly_name = params["FriendlyName"]
       chatbot = DB.read("chatbot")
       chatbot[:messaging_service] = {
@@ -133,7 +133,7 @@ module TwilioStub
     end
 
     post "/v1/Assistants" do
-      sid = "UA" + Faker::Crypto.md5
+      sid = "UA#{Faker::Crypto.md5}"
       friendly_name = params["FriendlyName"]
       unique_name = params["UniqueName"]
 
@@ -169,7 +169,7 @@ module TwilioStub
     post "/:api_version/Accounts/:account_id/IncomingPhoneNumbers.json" do
       Faker::Config.locale = "en-US"
       phone_number = Faker::PhoneNumber.cell_phone_in_e164
-      phone_number_sid = "PN" + Faker::Crypto.md5
+      phone_number_sid = "PN#{Faker::Crypto.md5}"
 
       chatbot = DB.read("chatbot")
       chatbot[:phone_numbers] ||= []
@@ -189,7 +189,7 @@ module TwilioStub
     end
 
     post "/:api_version/Accounts/:assistant_sid/Messages.json" do
-      message_sid = "MS" + Faker::Crypto.md5
+      message_sid = "MS#{Faker::Crypto.md5}"
       messages = DB.read("sms_messages")
       messages ||= []
       messages.push(
