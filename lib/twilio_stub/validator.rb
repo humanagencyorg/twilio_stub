@@ -55,7 +55,7 @@ module TwilioStub
     private
 
     def validated_by_webhook?
-      @schema.is_a?(Hash) && @schema["webhook"]
+      @schema.is_a?(Hash) && @schema.dig("webhook")
     end
 
     def schema_includes_list?

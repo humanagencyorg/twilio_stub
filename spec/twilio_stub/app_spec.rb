@@ -2,15 +2,15 @@ require "jwt"
 require "rack/test"
 require "spec_helper"
 
-module RSpecMixin
-  include Rack::Test::Methods
-
-  def app
-    described_class
-  end
-end
-
 RSpec.describe TwilioStub::App do
+  module RSpecMixin
+    include Rack::Test::Methods
+
+    def app
+      described_class
+    end
+  end
+
   before do
     TwilioStub.clear_store
 
@@ -342,8 +342,8 @@ RSpec.describe TwilioStub::App do
       it "writes assistant data to db" do
         friendly_name = "X AE A-12"
         md5 = "123"
-        sid = "UA#{md5}"
-        unique_name = "#{friendly_name}1"
+        sid = "UA" + md5
+        unique_name = friendly_name + "1"
         params = {
           "FriendlyName": friendly_name,
           "UniqueName": unique_name,
@@ -363,8 +363,8 @@ RSpec.describe TwilioStub::App do
       it "returns assistant_sid and unique name" do
         friendly_name = "X AE A-12"
         md5 = "123"
-        sid = "UA#{md5}"
-        unique_name = "#{friendly_name}1"
+        sid = "UA" + md5
+        unique_name = friendly_name + "1"
         params = {
           "FriendlyName": friendly_name,
           "UniqueName": unique_name,
@@ -439,7 +439,7 @@ RSpec.describe TwilioStub::App do
       it "writes phone number data to db" do
         md5 = "123"
         phone_number = "+4567"
-        phone_number_sid = "PN#{md5}"
+        phone_number_sid = "PN" + md5
 
         TwilioStub::DB.write("chatbot", {})
 
@@ -462,7 +462,7 @@ RSpec.describe TwilioStub::App do
       it "returns phone number" do
         md5 = "123"
         phone_number = "+4567"
-        phone_number_sid = "PN#{md5}"
+        phone_number_sid = "PN" + md5
 
         TwilioStub::DB.write("chatbot", {})
 
