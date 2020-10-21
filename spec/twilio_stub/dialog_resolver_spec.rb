@@ -470,6 +470,225 @@ RSpec.describe TwilioStub::DialogResolver do
     end
 
     context "when collect question contains validation" do
+      context "when validated by webhook" do
+        it "does not call on complete url if answer is not valid" do
+          customer_id = "fake_custom_id"
+          task = fake_task_stub.new
+          channel_name = "fake"
+          messages_key = "channel_fake_messages"
+          answer = "pizza"
+          write_message = message_writer(
+            key: messages_key,
+            author: customer_id,
+          )
+          schema = {
+            "styleSheet" => {
+              "style_sheet" => {
+                "collect" => {
+                  "validate" => {
+                    "on_failure" => {
+                      "repeat_question" => false,
+                    },
+                  },
+                },
+              },
+            },
+            "tasks" => [
+              {
+                "uniqueName" => "greeting",
+                "actions" => {
+                  "actions" => [
+                    { "redirect" => "task://block" },
+                  ],
+                },
+              },
+              "uniqueName" => "block",
+              "actions" => {
+                "actions" => [
+                  "collect" => {
+                    "questions" => [
+                      {
+                        "question" => "Are you sure?",
+                        "name" => "term",
+                        "validate" => {
+                          "webhook" => {
+                            "url" => "http://fakeurl.com/validate",
+                            "method" => "POST",
+                          },
+                          "on_failure" => {
+                            "messages" => [
+                              { "say" => "It should be yes" },
+                              { "say" => "Say yes, plz" },
+                            ],
+                          },
+                          "on_success" => {
+                            "say" => "Thanks",
+                          },
+                        },
+                      },
+                      {
+                        "question" => "What is your name?",
+                        "name" => "name",
+                      },
+                    ],
+                    "on_complete" => {
+                      "redirect" => {
+                        "uri" => "http://fakeurl.com",
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          }
+
+          twilio_request = stub_request(:post, "http://fakeurl.com/validate").
+            with(
+              body: {
+                "ValidateFieldAnswer" => answer,
+              }.to_json,
+              headers: {
+                "Accept" => "*/*",
+                "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+                "Host" => "fakeurl.com",
+                "User-Agent" => "Ruby",
+              },
+            ).
+            to_return(
+              status: 200,
+              body: { "valid" => "false" }.to_json,
+              headers: {},
+            )
+          on_complete_stub = stub_request(:post, "http://fakeurl.com").
+            to_return(
+              status: 200,
+              body: { "actions" => [{ "say" => "thank you" }] }.to_json,
+              headers: {},
+            )
+
+          TwilioStub::DB.write("schema", schema)
+          TwilioStub::DB.write(messages_key, [])
+
+          # Execution
+          described_class.new(channel_name, task).call
+          write_message.(answer)
+          described_class.new(channel_name, task).call
+          write_message.(answer)
+          described_class.new(channel_name, task).call
+
+          expect(twilio_request).to have_been_requested.twice
+          expect(on_complete_stub).not_to have_been_requested.once
+        end
+
+        it "calls on complete url if answer is valid" do
+          customer_id = "fake_custom_id"
+          task = fake_task_stub.new
+          channel_name = "fake"
+          messages_key = "channel_fake_messages"
+          answer = "pizza"
+          write_message = message_writer(
+            key: messages_key,
+            author: customer_id,
+          )
+          schema = {
+            "styleSheet" => {
+              "style_sheet" => {
+                "collect" => {
+                  "validate" => {
+                    "on_failure" => {
+                      "repeat_question" => false,
+                    },
+                  },
+                },
+              },
+            },
+            "tasks" => [
+              {
+                "uniqueName" => "greeting",
+                "actions" => {
+                  "actions" => [
+                    { "redirect" => "task://block" },
+                  ],
+                },
+              },
+              "uniqueName" => "block",
+              "actions" => {
+                "actions" => [
+                  "collect" => {
+                    "questions" => [
+                      {
+                        "question" => "Are you sure?",
+                        "name" => "term",
+                        "validate" => {
+                          "webhook" => {
+                            "url" => "http://fakeurl.com/validate",
+                            "method" => "POST",
+                          },
+                          "on_failure" => {
+                            "messages" => [
+                              { "say" => "It should be yes" },
+                              { "say" => "Say yes, plz" },
+                            ],
+                          },
+                          "on_success" => {
+                            "say" => "Thanks",
+                          },
+                        },
+                      },
+                      {
+                        "question" => "What is your name?",
+                        "name" => "name",
+                      },
+                    ],
+                    "on_complete" => {
+                      "redirect" => {
+                        "uri" => "http://fakeurl.com",
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          }
+
+          twilio_request = stub_request(:post, "http://fakeurl.com/validate").
+            with(
+              body: {
+                "ValidateFieldAnswer" => answer,
+              }.to_json,
+              headers: {
+                "Accept" => "*/*",
+                "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+                "Host" => "fakeurl.com",
+                "User-Agent" => "Ruby",
+              },
+            ).
+            to_return(
+              status: 200,
+              body: { "valid" => "true" }.to_json,
+              headers: {},
+            )
+          on_complete_stub = stub_request(:post, "http://fakeurl.com").
+            to_return(
+              status: 200,
+              body: { "actions" => [{ "say" => "thank you" }] }.to_json,
+              headers: {},
+            )
+
+          TwilioStub::DB.write("schema", schema)
+          TwilioStub::DB.write(messages_key, [])
+
+          # Execution
+          described_class.new(channel_name, task).call
+          write_message.(answer)
+          described_class.new(channel_name, task).call
+          described_class.new(channel_name, task).call
+
+          expect(twilio_request).to have_been_requested.once
+          expect(on_complete_stub).to have_been_requested.once
+        end
+      end
+
       context "whan contain allowed_values" do
         it "validates result by allowed_values list" do
           customer_id = "fake_custom_id"

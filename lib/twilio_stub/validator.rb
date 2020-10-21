@@ -32,6 +32,17 @@ module TwilioStub
     end
 
     def valid?
+      if validated_by_webhook?
+        response = Net::HTTP.post(
+          URI(@schema["webhook"]["url"]),
+          { "ValidateFieldAnswer" => @value }.to_json,
+        )
+
+        result = JSON.parse(response.body)["valid"]
+
+        return result == "true"
+      end
+
       return validate_by_schema if schema_includes_list?
 
       matcher = MATCHERS[@type]
@@ -42,6 +53,10 @@ module TwilioStub
     end
 
     private
+
+    def validated_by_webhook?
+      @schema.is_a?(Hash) && @schema.dig("webhook")
+    end
 
     def schema_includes_list?
       return false unless @schema.is_a?(Hash)
