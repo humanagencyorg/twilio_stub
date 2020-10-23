@@ -98,9 +98,9 @@ module TwilioStub
           "sid": sid,
         },
         "response": {
-          "says": {
+          "says": [{
             "text": "Hello",
-          },
+          }],
         },
       }.to_json
     end

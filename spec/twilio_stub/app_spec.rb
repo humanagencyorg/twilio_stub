@@ -244,11 +244,11 @@ RSpec.describe TwilioStub::App do
 
         parsed = JSON.parse(last_response.body)
         expect(parsed.dig("dialogue", "sid")).to eq(dialogue_sid)
-        expect(parsed.dig("response", "says", "text")).to eq(message)
+        expect(parsed.dig("response", "says", 0, "text")).to eq(message)
       end
     end
 
-    
+
    # stub_request(:post, "https://channels.autopilot.twilio.com/v2/AC9040882885f54f639a520fa71a36cf8f/UA65c5923d45c0c6d10d15ac369c90a12d/custom/sms_chat_3").
               #with(
                 #body: {"Language"=>"en-US", "Text"=>"Hi", "UserId"=>"3"},
