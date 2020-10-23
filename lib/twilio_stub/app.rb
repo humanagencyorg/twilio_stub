@@ -89,6 +89,22 @@ module TwilioStub
     end
 
     # Api requests
+    post "/v2/:account_sid/:assistant_sid/custom/:session_id" do
+      sid = Faker::Crypto.md5
+
+      status 200
+      {
+        "dialogue": {
+          "sid": sid,
+        },
+        "response": {
+          "says": {
+            "text": "Hello",
+          },
+        },
+      }.to_json
+    end
+
     get "/v2/Services/:assistant_id/Channels/:visitor_id" do
       DB.write("assistant_id", params[:assistant_id])
       DB.write("customer_id", params[:visitor_id])
