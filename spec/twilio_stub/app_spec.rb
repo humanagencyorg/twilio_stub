@@ -248,20 +248,6 @@ RSpec.describe TwilioStub::App do
       end
     end
 
-
-   # stub_request(:post, "https://channels.autopilot.twilio.com/v2/AC9040882885f54f639a520fa71a36cf8f/UA65c5923d45c0c6d10d15ac369c90a12d/custom/sms_chat_3").
-              #with(
-                #body: {"Language"=>"en-US", "Text"=>"Hi", "UserId"=>"3"},
-                #headers: {
-                  #'Accept'=>'application/json',
-                  #'Accept-Charset'=>'utf-8',
-                  #'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-                  #'Authorization'=>'Basic QUM5MDQwODgyODg1ZjU0ZjYzOWE1MjBmYTcxYTM2Y2Y4Zjo3MDg1OTQxNjUyZGMyMDYzMjZmNDk2ZWJkNDhhMGVhZg==',
-                  #'Content-Type'=>'application/x-www-form-urlencoded',
-                  #'User-Agent'=>'twilio-ruby/5.41.0 (ruby/x86_64-darwin19 2.6.6-p146)'
-                #}).
-              #to_return(status: 200, body: "", headers: {})
-
     describe "POST autopilot/update" do
       it "returns 200" do
         headers = { "CONTENT_TYPE" => "application/json" }
