@@ -261,12 +261,13 @@ RSpec.describe TwilioStub::App do
             Text: message,
             UserId: user_id,
           }
-          post "/v2/#{account_sid}/#{assistant_sid}/custom/#{session_sid}", params
+          post "/v2/#{account_sid}/#{assistant_sid}/custom/#{session_sid}",
+               params
 
           parsed = JSON.parse(last_response.body)
           expect(parsed.dig("current_task")).to eq("fallback")
           expect(parsed.dig("response", "says", 0, "text")).to be_nil
-        end 
+        end
       end
     end
 
