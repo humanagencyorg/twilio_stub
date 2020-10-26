@@ -91,18 +91,27 @@ module TwilioStub
     # Api requests
     post "/v2/:account_sid/:assistant_sid/custom/:session_id" do
       sid = Faker::Crypto.md5
+      message = params["Text"]
 
       status 200
-      {
-        "dialogue": {
-          "sid": sid,
-        },
-        "response": {
-          "says": [{
-            "text": "Hello",
-          }],
-        },
-      }.to_json
+      if message == "fallback"
+        {
+          "current_task": "fallback",
+        }.to_json
+      else
+        {
+          "dialogue": {
+            "sid": sid,
+          },
+          "response": {
+            "says": [
+              {
+                "text": "Hello",
+              },
+            ],
+          },
+        }.to_json
+      end
     end
 
     get "/v2/Services/:assistant_id/Channels/:visitor_id" do

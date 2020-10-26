@@ -246,6 +246,28 @@ RSpec.describe TwilioStub::App do
         expect(parsed.dig("dialogue", "sid")).to eq(dialogue_sid)
         expect(parsed.dig("response", "says", 0, "text")).to eq(message)
       end
+
+      context "when the message mentions fallback" do
+        it "should return the fallback JSON" do
+          account_sid = "AC123"
+          assistant_sid = "UA123"
+          session_sid = "sms_chat_3"
+          message = "fallback"
+          user_id = 3
+          dialogue_sid = "DC123"
+          allow(Faker::Crypto).to receive(:md5).and_return(dialogue_sid)
+
+          params = {
+            Text: message,
+            UserId: user_id,
+          }
+          post "/v2/#{account_sid}/#{assistant_sid}/custom/#{session_sid}", params
+
+          parsed = JSON.parse(last_response.body)
+          expect(parsed.dig("current_task")).to eq("fallback")
+          expect(parsed.dig("response", "says", 0, "text")).to be_nil
+        end 
+      end
     end
 
     describe "POST autopilot/update" do
