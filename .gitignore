@@ -12,6 +12,10 @@
 
 # vim artefacts
 *.swp
+*.sw?
+*.sw*
+*tags*
 
 # temp files
 twilio-stub.store
+
