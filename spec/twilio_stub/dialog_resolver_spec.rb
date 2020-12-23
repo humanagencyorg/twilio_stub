@@ -176,7 +176,7 @@ RSpec.describe TwilioStub::DialogResolver do
       expect(db_results).to eq({})
 
       expect(task.sleeps.count).to eq(1)
-      expect(task.sleeps).to eq([0.5])
+      expect(task.sleeps).to eq([0.2])
     end
 
     it "collects results" do
@@ -466,7 +466,7 @@ RSpec.describe TwilioStub::DialogResolver do
       messages = db_messages.map { |d| d[:body] }
       expect(messages).to eq(expected_messages)
 
-      expect(task.sleeps).to eq(Array.new(4, 0.5))
+      expect(task.sleeps).to eq(Array.new(4, 0.2))
     end
 
     context "when collect question contains validation" do
@@ -830,7 +830,7 @@ RSpec.describe TwilioStub::DialogResolver do
           messages = db_messages.map { |d| d[:body] }
           expect(messages).to eq(expected_messages)
 
-          expect(task.sleeps).to eq(Array.new(6, 0.5))
+          expect(task.sleeps).to eq(Array.new(6, 0.2))
         end
       end
 
@@ -1072,7 +1072,7 @@ RSpec.describe TwilioStub::DialogResolver do
 
           expect(messages).to eq(expected_messages)
 
-          expect(task.sleeps).to eq(Array.new(19, 0.5))
+          expect(task.sleeps).to eq(Array.new(19, 0.2))
         end
       end
     end
@@ -1191,7 +1191,7 @@ RSpec.describe TwilioStub::DialogResolver do
       messages = db_messages.map { |d| d[:body] }
       expect(messages).to eq(expected_messages)
 
-      expect(task.sleeps).to eq(Array.new(2, 0.5))
+      expect(task.sleeps).to eq(Array.new(2, 0.2))
     end
 
     context "when option is not found" do
@@ -1311,7 +1311,7 @@ RSpec.describe TwilioStub::DialogResolver do
         messages = db_messages.map { |d| d[:body] }
         expect(messages).to eq(expected_messages)
 
-        expect(task.sleeps).to eq(Array.new(3, 0.5))
+        expect(task.sleeps).to eq(Array.new(3, 0.2))
       end
     end
 

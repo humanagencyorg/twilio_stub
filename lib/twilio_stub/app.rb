@@ -69,7 +69,7 @@ module TwilioStub
       DB.write(messages_key, messages)
 
       Async do |task|
-        task.sleep(1)
+        task.sleep(0.5)
         DialogResolver.
           new(channel_name, task).
           call
