@@ -93,7 +93,11 @@ module TwilioStub
           body,
         )
 
-        actions = JSON.parse(result.body)["actions"]
+        begin
+          actions = JSON.parse(result.body)["actions"]
+        rescue
+          action = []
+        end
 
         handle_actions(actions)
       end
