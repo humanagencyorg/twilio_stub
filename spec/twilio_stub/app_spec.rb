@@ -632,5 +632,51 @@ RSpec.describe TwilioStub::App do
         )
       end
     end
+
+    describe "POST /:api_version/Accounts/:account_id/Messages.json" do
+      it "accepts requests" do
+        account_sid = "abc123"
+        params = {
+          message_service_sid: "def456",
+          body: "Hi!",
+          to: "+13142223344",
+          smart_encoded: true,
+        }
+
+        post "/2010-04-01/Accounts/#{account_sid}/Messages.json", params
+
+        expect(last_response.status).to eq(200)
+      end
+
+      it "should return json" do
+        api_version = "2010-04-01"
+        account_sid = "abc123"
+        body = "Hi!"
+        message_service_sid = "def456"
+        params = {
+          messaging_service_sid: message_service_sid,
+          body: body,
+          to: "+13142223344",
+          smart_encoded: true,
+        }
+
+        post "/#{api_version}/Accounts/#{account_sid}/Messages.json", params
+
+        last_json = JSON.parse(last_response.body)
+        expect(last_json["api_version"]).to eq(api_version)
+        expect(last_json["account_sid"]).to eq(account_sid)
+        expect(last_json["body"]).to eq(body)
+        expect(last_json["date_created"]).not_to be_nil
+        expect(last_json["date_sent"]).not_to be_nil
+        expect(last_json["date_updated"]).not_to be_nil
+        expect(last_json["direction"]).to eq("outbound-api")
+        expect(last_json["error_code"]).to be_nil
+        expect(last_json["error_message"]).to be_nil
+        expect(last_json["messaging_service_sid"]).to eq(message_service_sid)
+        expect(last_json["num_media"]).to eq(0)
+        expect(last_json["num_segments"]).to eq(1)
+        expect(last_json["price"]).to eq(1)
+      end
+    end
   end
 end

@@ -89,6 +89,28 @@ module TwilioStub
     end
 
     # Api requests
+
+    post "/2010-04-01/Accounts/:account_sid/Messages.json" do
+      api_version = "2010-04-01"
+      account_sid = params["account_sid"]
+      body = params["body"]
+      message_service_sid = params["messaging_service_sid"]
+      status 200
+      {
+        api_version: api_version,
+        account_sid: account_sid,
+        body: body,
+        date_created: Time.now,
+        date_sent: Time.now,
+        date_updated: Time.now,
+        direction: "outbound-api",
+        messaging_service_sid: message_service_sid,
+        num_media: 0,
+        num_segments: 1,
+        price: 1,
+      }.to_json
+    end
+
     post "/v2/:account_sid/:assistant_sid/custom/:session_id" do
       sid = Faker::Crypto.md5
       message = params["Text"]
