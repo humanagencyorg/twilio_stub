@@ -41,4 +41,21 @@ module TwilioStub
       },
     )
   end
+
+  def self.last_sent_message
+    DB.read("sms_messages").last
+  end
+
+  def self.send_sms_response(from:, body:)
+    inbound_url = DB.read("chatbot").dig(:messaging_service, :inbound_url)
+    params = {
+      Body: body,
+      From: from,
+    }
+
+    Net::HTTP.post_form(
+      URI(inbound_url),
+      params,
+    )
+  end
 end

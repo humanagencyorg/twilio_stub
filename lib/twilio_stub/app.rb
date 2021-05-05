@@ -89,25 +89,39 @@ module TwilioStub
     end
 
     # Api requests
-    post "/v2/:account_sid/:assistant_sid/custom/:session_id" do
-      sid = Faker::Crypto.md5
+    post "/v2/:account_sid/:assistant_sid/custom/:session_id" do # rubocop:disable Metrics/BlockLength
+      cross_origin
       message = params["Text"]
 
-      status 200
+      channel_name = params[:session_id]
+      channel_key = "channel_#{channel_name}"
+      messages_key = "channel_#{channel_name}_messages"
+      channel = DB.read(channel_key) || { customer_id: channel_name }
+      messages = (DB.read(messages_key) || [])
+      DB.write("channel_#{channel_name}_user_id", params["UserId"])
+      messages.push(
+        body: params["Text"],
+        author: channel[:customer_id],
+        sid: (0...8).map { ("a".."z").to_a[rand(26)] }.join,
+      )
+
+      DB.write(messages_key, messages)
+
       if message == "fallback"
         {
           "current_task": "fallback",
         }.to_json
       else
+        status 200
+
+        DialogResolver.
+          new(channel_name).
+          call
+        message = DB.read(messages_key).last[:body]
         {
-          "dialogue": {
-            "sid": sid,
-          },
           "response": {
             "says": [
-              {
-                "text": "Hello",
-              },
+              { "text": message },
             ],
           },
         }.to_json

@@ -6,7 +6,7 @@ require "twilio_stub/validator"
 
 module TwilioStub
   class DialogResolver
-    def initialize(channel_name, async_task)
+    def initialize(channel_name, async_task = nil)
       @channel_name = channel_name
       @async_task = async_task
     end
@@ -83,9 +83,11 @@ module TwilioStub
         handle_actions(task.dig("actions", "actions"))
       when Hash
         dialog_sid = read_data("dialog_sid")
+        user_id = read_data("user_id")
         url = action.dig("redirect", "uri")
         body = {
           DialogueSid: dialog_sid,
+          UserIdentifier: user_id,
         }
 
         result = Net::HTTP.post_form(
@@ -245,6 +247,7 @@ module TwilioStub
 
     def finish_collect_dialog(results)
       dialog_sid = read_data("dialog_sid")
+      user_id = read_data("user_id")
       body_results = results.map do |k, v|
         [k, { answer: v }]
       end.to_h
@@ -253,6 +256,7 @@ module TwilioStub
 
       body = {
         DialogueSid: dialog_sid,
+        UserIdentifier: user_id,
         CurrentInput: current_input,
         Memory: {
           twilio: {
@@ -321,7 +325,7 @@ module TwilioStub
       messages.push(message)
 
       write_data("messages", messages)
-      @async_task.sleep(0.5)
+      @async_task&.sleep(0.5)
     end
 
     def schema

@@ -91,4 +91,50 @@ RSpec.describe TwilioStub do
         with(body: expected_body)
     end
   end
+
+  describe ".last_sent_message" do
+    it "returns last message from sms_messages" do
+      first_message = "first message"
+      last_message = "last_message"
+      messages = [first_message, last_message]
+
+      allow(TwilioStub::DB).
+        to receive(:read).
+        with("sms_messages").
+        and_return(messages)
+
+      result = described_class.last_sent_message
+
+      expect(result).to eq(last_message)
+    end
+  end
+
+  describe ".send_sms_response" do
+    it "calls inbound url with proper params" do
+      inbound_url = "http://fake.url"
+      chatbot = {
+        messaging_service: {
+          inbound_url: inbound_url,
+        },
+      }
+      from = "12345678901"
+      body = "message body"
+      request_body = {
+        Body: body,
+        From: from,
+      }
+
+      allow(TwilioStub::DB).
+        to receive(:read).
+        with("chatbot").
+        and_return(chatbot)
+      stub_request(:post, inbound_url).
+        to_return(status: 200)
+
+      described_class.send_sms_response(from: from, body: body)
+
+      expect(WebMock).to have_requested(:post, inbound_url).
+        with(body: request_body)
+    end
+  end
 end

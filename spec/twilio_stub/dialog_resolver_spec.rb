@@ -4,7 +4,6 @@ RSpec.describe TwilioStub::DialogResolver do
   context "when conversation is not started yet" do
     it "looking for greeting action and execute it" do
       # Preparation
-      task = fake_task_stub.new
       channel_name = "fake"
       messages_key = "channel_fake_messages"
       schema = {
@@ -24,7 +23,7 @@ RSpec.describe TwilioStub::DialogResolver do
       TwilioStub::DB.write(messages_key, [])
 
       # Execution
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name).call
 
       # Expectation
       messages = TwilioStub::DB.read(messages_key)
@@ -36,7 +35,6 @@ RSpec.describe TwilioStub::DialogResolver do
 
     it "writes dialog_sid and task to db" do
       # Preparation
-      task = fake_task_stub.new
       channel_name = "fake"
       messages_key = "channel_fake_messages"
       schema_task = {
@@ -57,7 +55,7 @@ RSpec.describe TwilioStub::DialogResolver do
       TwilioStub::DB.write(messages_key, [])
 
       # Execution
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name).call
 
       # Expectation
       db_dialog_sid = TwilioStub::DB.read("channel_fake_dialog_sid")
@@ -69,7 +67,6 @@ RSpec.describe TwilioStub::DialogResolver do
     context "when greeting contains redirect" do
       it "handles redirection" do
         # Preparation
-        task = fake_task_stub.new
         channel_name = "fake"
         messages_key = "channel_fake_messages"
         block_task = {
@@ -99,7 +96,7 @@ RSpec.describe TwilioStub::DialogResolver do
         TwilioStub::DB.write(messages_key, [])
 
         # Execution
-        described_class.new(channel_name, task).call
+        described_class.new(channel_name).call
 
         # Expectation
         db_task = TwilioStub::DB.read("channel_fake_task")
@@ -181,7 +178,6 @@ RSpec.describe TwilioStub::DialogResolver do
 
     it "collects results" do
       customer_id = "fake_custom_id"
-      task = fake_task_stub.new
       channel_name = "fake"
       messages_key = "channel_fake_messages"
       write_message = message_writer(
@@ -237,11 +233,11 @@ RSpec.describe TwilioStub::DialogResolver do
       TwilioStub::DB.write(messages_key, [])
 
       # Execution
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name).call
       write_message.("Fake name")
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name).call
       write_message.("Fake second name")
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name).call
 
       # Expectation
       db_results = TwilioStub::DB.read("channel_fake_results")
@@ -256,7 +252,6 @@ RSpec.describe TwilioStub::DialogResolver do
 
     it "passed the correct url and body to the callback server" do
       customer_id = "fake_custom_id"
-      task = fake_task_stub.new
       channel_name = "fake"
       messages_key = "channel_fake_messages"
       expected_url = "http://fakeurl.com"
@@ -316,10 +311,13 @@ RSpec.describe TwilioStub::DialogResolver do
       TwilioStub::DB.write("schema", schema)
       TwilioStub::DB.write(messages_key, [])
 
+      user_id = "fake_user_id"
+      TwilioStub::DB.write("channel_#{channel_name}_user_id", user_id)
+
       # Execution
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name).call
       write_message.("test answer")
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name).call
 
       # Expectation
       db_messages = TwilioStub::DB.read(messages_key)
@@ -329,6 +327,7 @@ RSpec.describe TwilioStub::DialogResolver do
 
       expected_body = {
         DialogueSid: dialog_sid,
+        UserIdentifier: user_id,
         CurrentInput: "test answer",
         Memory: {
           "twilio" => {
@@ -407,11 +406,15 @@ RSpec.describe TwilioStub::DialogResolver do
           },
         ],
       }
+
+      user_id = "fake_user_id"
+      TwilioStub::DB.write("channel_#{channel_name}_user_id", user_id)
       stub_request(:post, "http://fakeurl.com/").
         with(
           body: {
             "DialogueSid" => /.*/,
             "CurrentInput" => /.*/,
+            "UserIdentifier" => user_id,
             "Memory" => {
               "twilio" => {
                 "collected_data" => {
@@ -473,7 +476,6 @@ RSpec.describe TwilioStub::DialogResolver do
       context "when validated by webhook" do
         it "does not call on complete url if answer is not valid" do
           customer_id = "fake_custom_id"
-          task = fake_task_stub.new
           channel_name = "fake"
           messages_key = "channel_fake_messages"
           answer = "pizza"
@@ -571,9 +573,9 @@ RSpec.describe TwilioStub::DialogResolver do
           TwilioStub::DB.write(messages_key, [])
 
           # Execution
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name).call
           write_message.(answer)
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name).call
 
           expect(twilio_request).to have_been_requested.once
           expect(on_complete_stub).not_to have_been_requested.once
@@ -581,7 +583,6 @@ RSpec.describe TwilioStub::DialogResolver do
 
         it "calls on complete url if answer is valid" do
           customer_id = "fake_custom_id"
-          task = fake_task_stub.new
           channel_name = "fake"
           messages_key = "channel_fake_messages"
           answer = "pizza"
@@ -679,10 +680,10 @@ RSpec.describe TwilioStub::DialogResolver do
           TwilioStub::DB.write(messages_key, [])
 
           # Execution
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name).call
           write_message.(answer)
-          described_class.new(channel_name, task).call
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name).call
+          described_class.new(channel_name).call
 
           expect(twilio_request).to have_been_requested.once
           expect(on_complete_stub).to have_been_requested.once
@@ -770,11 +771,15 @@ RSpec.describe TwilioStub::DialogResolver do
               },
             ],
           }
+
+          user_id = "fake_user_id"
+          TwilioStub::DB.write("channel_#{channel_name}_user_id", user_id)
           stub_request(:post, "http://fakeurl.com/").
             with(
               body: {
                 "DialogueSid" => /.*/,
                 "CurrentInput" => /.*/,
+                "UserIdentifier" => user_id,
                 "Memory" => {
                   "twilio" => {
                     "collected_data" => {
@@ -977,11 +982,16 @@ RSpec.describe TwilioStub::DialogResolver do
               },
             ],
           }
+
+          user_id = "fake_user_id"
+          TwilioStub::DB.write("channel_#{channel_name}_user_id", user_id)
+
           stub_request(:post, "http://fakeurl.com/").
             with(
               body: {
                 "DialogueSid" => /.*/,
                 "CurrentInput" => /.*/,
+                "UserIdentifier" => user_id,
                 "Memory" => {
                   "twilio" => {
                     "collected_data" => {
@@ -1152,9 +1162,11 @@ RSpec.describe TwilioStub::DialogResolver do
         ],
       }
 
+      user_id = "fake_user_id"
+      TwilioStub::DB.write("channel_#{channel_name}_user_id", user_id)
       stub_request(:post, "http://fake.com/carbonara").
         with(
-          body: { "DialogueSid" => /.*/ },
+          body: { "DialogueSid" => /.*/, "UserIdentifier" => user_id },
           headers: {
             "Accept" => "*/*",
             "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
@@ -1270,9 +1282,11 @@ RSpec.describe TwilioStub::DialogResolver do
           ],
         }
 
+        user_id = "fake_user_id"
+        TwilioStub::DB.write("channel_#{channel_name}_user_id", user_id)
         stub_request(:post, "http://fake.com/carbonara").
           with(
-            body: { "DialogueSid" => /.*/ },
+            body: { "DialogueSid" => /.*/, "UserIdentifier" => user_id },
             headers: {
               "Accept" => "*/*",
               "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
@@ -1317,7 +1331,6 @@ RSpec.describe TwilioStub::DialogResolver do
 
     context "when show action is present" do
       it "returns promise with media url" do
-        task = fake_task_stub.new
         channel_name = "fake"
         messages_key = "channel_fake_messages"
         public_id = "public_id_123"
@@ -1359,7 +1372,7 @@ RSpec.describe TwilioStub::DialogResolver do
         TwilioStub::DB.write(messages_key, [])
 
         # Execution
-        described_class.new(channel_name, task).call
+        described_class.new(channel_name).call
 
         # Expectation
         messages = TwilioStub::DB.read(messages_key)
