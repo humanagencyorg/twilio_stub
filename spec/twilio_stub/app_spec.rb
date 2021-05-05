@@ -199,15 +199,6 @@ RSpec.describe TwilioStub::App do
         expect(last_message[:body]).to eq(message)
         expect(last_message[:author]).to eq(customer_id)
       end
-
-      def stub_dialog_resolver
-        dialog_resolver = instance_double(TwilioStub::DialogResolver)
-        allow(TwilioStub::DialogResolver).
-          to receive(:new).
-          and_return(dialog_resolver)
-        allow(dialog_resolver).to receive(:call)
-        dialog_resolver
-      end
     end
 
     describe "POST /v2/:account_sid/:assistant_sid/custom/:session_sid" do
@@ -222,29 +213,42 @@ RSpec.describe TwilioStub::App do
           UserId: user_id,
         }
 
+        stub_dialog_resolver
+
         post "/v2/#{account_sid}/#{assistant_sid}/custom/#{session_sid}", params
 
         expect(last_response.status).to eq(200)
       end
 
-      it "returns a message and dialogue sid" do
+      it "returns last message from messages array" do
         account_sid = "AC123"
         assistant_sid = "UA123"
         session_sid = "sms_chat_3"
         message = "Hello"
         user_id = 3
-        dialogue_sid = "DC123"
-        allow(Faker::Crypto).to receive(:md5).and_return(dialogue_sid)
+        last_message = "Last mesage"
 
         params = {
           Text: message,
           UserId: user_id,
         }
+
+        dialog_resolver = instance_double(TwilioStub::DialogResolver)
+        allow(TwilioStub::DialogResolver).
+          to receive(:new).
+          and_return(dialog_resolver)
+        allow(dialog_resolver).
+          to receive(:call) do
+            messages_key = "channel_#{session_sid}_messages"
+            TwilioStub::DB.write(messages_key, [{ body: last_message }])
+          end
+
+
         post "/v2/#{account_sid}/#{assistant_sid}/custom/#{session_sid}", params
 
         parsed = JSON.parse(last_response.body)
-        expect(parsed.dig("dialogue", "sid")).to eq(dialogue_sid)
-        expect(parsed.dig("response", "says", 0, "text")).to eq(message)
+
+        expect(parsed.dig("response", "says", 0, "text")).to eq(last_message)
       end
 
       context "when the message mentions fallback" do
@@ -632,5 +636,14 @@ RSpec.describe TwilioStub::App do
         )
       end
     end
+  end
+
+  def stub_dialog_resolver
+    dialog_resolver = instance_double(TwilioStub::DialogResolver)
+    allow(TwilioStub::DialogResolver).
+      to receive(:new).
+      and_return(dialog_resolver)
+    allow(dialog_resolver).to receive(:call)
+    dialog_resolver
   end
 end

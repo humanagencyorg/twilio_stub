@@ -98,6 +98,7 @@ module TwilioStub
       messages_key = "channel_#{channel_name}_messages"
       channel = DB.read(channel_key) || { customer_id: channel_name }
       messages = (DB.read(messages_key) || [])
+      DB.write("channel_#{channel_name}_user_id", params["UserId"])
       messages.push(
         body: params["Text"],
         author: channel[:customer_id],
@@ -111,11 +112,19 @@ module TwilioStub
           "current_task": "fallback",
         }.to_json
       else
-        Async do |task|
-          DialogResolver.
-            new(channel_name, task).
-            call
-        end
+        status 200
+
+        DialogResolver.
+          new(channel_name).
+          call
+        message = DB.read(messages_key).last[:body]
+        {
+          "response": {
+            "says": [
+              { "text": message },
+            ],
+          },
+        }.to_json
       end
     end
 

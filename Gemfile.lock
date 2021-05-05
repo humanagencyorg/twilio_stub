@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    twilio_stub (0.1.8)
+    twilio_stub (0.1.9)
       async (~> 1.26)
       capybara
       faker (~> 2.11)
