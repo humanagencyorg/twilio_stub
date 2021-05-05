@@ -243,7 +243,6 @@ RSpec.describe TwilioStub::App do
             TwilioStub::DB.write(messages_key, [{ body: last_message }])
           end
 
-
         post "/v2/#{account_sid}/#{assistant_sid}/custom/#{session_sid}", params
 
         parsed = JSON.parse(last_response.body)

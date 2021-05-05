@@ -325,7 +325,7 @@ module TwilioStub
       messages.push(message)
 
       write_data("messages", messages)
-      @async_task.sleep(0.5) if @async_task
+      @async_task&.sleep(0.5)
     end
 
     def schema

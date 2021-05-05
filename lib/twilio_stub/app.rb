@@ -89,7 +89,7 @@ module TwilioStub
     end
 
     # Api requests
-    post "/v2/:account_sid/:assistant_sid/custom/:session_id" do
+    post "/v2/:account_sid/:assistant_sid/custom/:session_id" do # rubocop:disable Metrics/BlockLength
       cross_origin
       message = params["Text"]
 
