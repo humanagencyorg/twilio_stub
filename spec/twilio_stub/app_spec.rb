@@ -544,6 +544,24 @@ RSpec.describe TwilioStub::App do
       end
     end
 
+    describe "POST /:api_version/Accounts.json" do
+      it "returns message sid" do
+        name = "fake_friendly_name"
+        sid = "fake_message_sid"
+        full_sid = "AC#{sid}"
+        params = {
+          FriendlyName: name,
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(sid)
+
+        post "/v2/Accounts.json", params
+
+        expect(last_response.status).to eq(200)
+        response = JSON.parse(last_response.body)
+        expect(response["sid"]).to eq(full_sid)
+      end
+    end
+
     describe "POST /:api_version/Accounts/:assistant_sid/Messages.json" do
       it "returns message sid" do
         assistant_sid = "fake_assistant_sid"
