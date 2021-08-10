@@ -247,5 +247,16 @@ module TwilioStub
         sid: message_sid,
       }.to_json
     end
+
+    post "/:api_version/Accounts.json" do
+      account_sid = "AC" + Faker::Crypto.md5
+
+      content_type "application/json"
+      status 200
+
+      {
+        sid: account_sid,
+      }.to_json
+    end
   end
 end

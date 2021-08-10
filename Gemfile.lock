@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    twilio_stub (0.1.9)
+    twilio_stub (0.1.10)
       async (~> 1.26)
       capybara
       faker (~> 2.11)
@@ -13,10 +13,10 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.7.0)
+    addressable (2.8.0)
       public_suffix (>= 2.0.2, < 5.0)
     ast (2.4.0)
-    async (1.29.0)
+    async (1.30.1)
       console (~> 1.10)
       nio4r (~> 2.3)
       timers (~> 4.1)
@@ -29,14 +29,14 @@ GEM
       regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
     coderay (1.1.2)
-    concurrent-ruby (1.1.8)
-    console (1.12.0)
+    concurrent-ruby (1.1.9)
+    console (1.13.1)
       fiber-local
     crack (0.4.5)
       rexml
     diff-lcs (1.3)
     docile (1.3.2)
-    faker (2.17.0)
+    faker (2.18.0)
       i18n (>= 1.6, < 2)
     fiber-local (1.0.0)
     hashdiff (1.0.1)
@@ -46,10 +46,12 @@ GEM
     jwt (2.2.3)
     method_source (1.0.0)
     mini_mime (1.1.0)
+    mini_portile2 (2.5.3)
     mustermann (1.1.1)
       ruby2_keywords (~> 0.0.1)
     nio4r (2.5.7)
-    nokogiri (1.11.3-x86_64-darwin)
+    nokogiri (1.11.7)
+      mini_portile2 (~> 2.5.0)
       racc (~> 1.4)
     parallel (1.19.1)
     parser (2.7.1.2)
@@ -90,7 +92,7 @@ GEM
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 2.0)
     ruby-progressbar (1.10.1)
-    ruby2_keywords (0.0.4)
+    ruby2_keywords (0.0.5)
     simplecov (0.18.5)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -104,7 +106,7 @@ GEM
     tilt (2.0.10)
     timers (4.3.3)
     unicode-display_width (1.7.0)
-    webmock (3.12.2)
+    webmock (3.13.0)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
@@ -124,4 +126,4 @@ DEPENDENCIES
   twilio_stub!
 
 BUNDLED WITH
-   2.1.4
+   2.2.24
