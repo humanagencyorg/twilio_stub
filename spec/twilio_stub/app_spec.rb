@@ -3,7 +3,7 @@ require "rack/test"
 require "spec_helper"
 
 RSpec.describe TwilioStub::App do
-  module RSpecMixin
+  module RSpecMixin # rubocop:disable Lint/ConstantDefinitionInBlock
     include Rack::Test::Methods
 
     def app
@@ -47,10 +47,10 @@ RSpec.describe TwilioStub::App do
       it "returns status 200" do
         channel_name = "new_channel"
         channel_info = {
-          "grants": {
-            "identity": "visitor_1",
-            "chat": {
-              "service_sid": "sid",
+          grants: {
+            identity: "visitor_1",
+            chat: {
+              service_sid: "sid",
             },
           },
         }
@@ -69,10 +69,10 @@ RSpec.describe TwilioStub::App do
         identity = "identity"
         service_sid = "123"
         channel_info = {
-          "grants": {
-            "identity": identity,
-            "chat": {
-              "service_sid": service_sid,
+          grants: {
+            identity: identity,
+            chat: {
+              service_sid: service_sid,
             },
           },
         }
@@ -92,10 +92,10 @@ RSpec.describe TwilioStub::App do
       it "creates messages array for channel" do
         channel_name = "new_channel"
         channel_info = {
-          "grants": {
-            "identity": "visitor_1",
-            "chat": {
-              "service_sid": "sid",
+          grants: {
+            identity: "visitor_1",
+            chat: {
+              service_sid: "sid",
             },
           },
         }
@@ -268,7 +268,7 @@ RSpec.describe TwilioStub::App do
                params
 
           parsed = JSON.parse(last_response.body)
-          expect(parsed.dig("current_task")).to eq("fallback")
+          expect(parsed["current_task"]).to eq("fallback")
           expect(parsed.dig("response", "says", 0, "text")).to be_nil
         end
       end
@@ -350,9 +350,7 @@ RSpec.describe TwilioStub::App do
 
         post "/v1/Services", params
 
-        chatbot = TwilioStub::DB.read("chatbot")
-        expect(chatbot).to have_key(:messaging_service)
-        ms = chatbot[:messaging_service]
+        ms = TwilioStub::DB.read("messaging_service")
         expect(ms[:friendly_name]).to eq(friendly_name)
         expect(ms[:sid]).to eq(full_sid)
         expect(ms[:inbound_url]).to eq(inbound_url)
@@ -406,11 +404,11 @@ RSpec.describe TwilioStub::App do
       it "writes assistant data to db" do
         friendly_name = "X AE A-12"
         md5 = "123"
-        sid = "UA" + md5
-        unique_name = friendly_name + "1"
+        sid = "UA#{md5}"
+        unique_name = "#{friendly_name}1"
         params = {
-          "FriendlyName": friendly_name,
-          "UniqueName": unique_name,
+          FriendlyName: friendly_name,
+          UniqueName: unique_name,
         }
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
@@ -427,11 +425,11 @@ RSpec.describe TwilioStub::App do
       it "returns assistant_sid and unique name" do
         friendly_name = "X AE A-12"
         md5 = "123"
-        sid = "UA" + md5
-        unique_name = friendly_name + "1"
+        sid = "UA#{md5}"
+        unique_name = "#{friendly_name}1"
         params = {
-          "FriendlyName": friendly_name,
-          "UniqueName": unique_name,
+          FriendlyName: friendly_name,
+          UniqueName: unique_name,
         }
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
@@ -450,7 +448,7 @@ RSpec.describe TwilioStub::App do
         assistant_sid = "AC123"
         development_stage = "fake_dev_stage"
         params = {
-          "DevelopmentStage": development_stage,
+          DevelopmentStage: development_stage,
         }
         TwilioStub::DB.write("chatbot", {})
 
@@ -463,7 +461,7 @@ RSpec.describe TwilioStub::App do
         assistant_sid = "AC123"
         development_stage = "fake_dev_stage"
         params = {
-          "DevelopmentStage": development_stage,
+          DevelopmentStage: development_stage,
         }
         TwilioStub::DB.write("chatbot", {})
 
@@ -481,7 +479,7 @@ RSpec.describe TwilioStub::App do
         development_stage = "fake_dev_stage"
         TwilioStub::DB.write("chatbot", {})
         params = {
-          "DevelopmentStage": development_stage,
+          DevelopmentStage: development_stage,
         }
 
         post "/v1/Assistants/#{assistant_sid}", params
@@ -493,8 +491,6 @@ RSpec.describe TwilioStub::App do
 
     describe "POST /:api_v/Accounts/:account_id/IncomingPhoneNumbers.json" do
       it "returns status 200" do
-        TwilioStub::DB.write("chatbot", {})
-
         post "/v2/Accounts/123/IncomingPhoneNumbers.json"
 
         expect(last_response.status).to eq(200)
@@ -503,9 +499,7 @@ RSpec.describe TwilioStub::App do
       it "writes phone number data to db" do
         md5 = "123"
         phone_number = "+4567"
-        phone_number_sid = "PN" + md5
-
-        TwilioStub::DB.write("chatbot", {})
+        phone_number_sid = "PN#{md5}"
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).
@@ -514,11 +508,11 @@ RSpec.describe TwilioStub::App do
 
         post "/v2/Accounts/123/IncomingPhoneNumbers.json"
 
-        chatbot = TwilioStub::DB.read("chatbot")
+        numbers = TwilioStub::DB.read("phone_numbers")
 
-        expect(chatbot[:phone_numbers]).to be_an(Array)
-        expect(chatbot[:phone_numbers].count).to eq(1)
-        number = chatbot[:phone_numbers].first
+        expect(numbers).to be_an(Array)
+        expect(numbers.count).to eq(1)
+        number = numbers.first
         expect(number[:phone_number]).to eq(phone_number)
         expect(number[:phone_number_sid]).to eq(phone_number_sid)
       end
@@ -526,9 +520,7 @@ RSpec.describe TwilioStub::App do
       it "returns phone number" do
         md5 = "123"
         phone_number = "+4567"
-        phone_number_sid = "PN" + md5
-
-        TwilioStub::DB.write("chatbot", {})
+        phone_number_sid = "PN#{md5}"
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).

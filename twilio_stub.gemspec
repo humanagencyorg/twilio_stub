@@ -16,14 +16,14 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.homepage      = "https://github.com/humanagencyorg/twilio_stub"
   spec.license       = "MIT"
 
-  spec.required_ruby_version = ">= 2.6"
+  spec.required_ruby_version = ">= 2.7"
 
   if spec.respond_to?(:metadata)
     spec.metadata["homepage_uri"] = spec.homepage
     spec.metadata["source_code_uri"] = spec.homepage
   else
     raise "RubyGems 2.0 or newer is required to protect against " \
-      "public gem pushes."
+          "public gem pushes."
   end
 
   # Specify which files should be added to the gem when it is released.
@@ -42,6 +42,8 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.add_development_dependency "rake", ">= 12.3.3"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rubocop", ">= 0.82"
+  spec.add_development_dependency "rubocop-rake"
+  spec.add_development_dependency "rubocop-rspec"
 
   spec.add_runtime_dependency "async", "~> 1.26"
   spec.add_runtime_dependency "capybara"
