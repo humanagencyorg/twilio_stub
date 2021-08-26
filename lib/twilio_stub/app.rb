@@ -147,14 +147,13 @@ module TwilioStub
     post "/v1/Services" do
       sid = "MG" + Faker::Crypto.md5
       friendly_name = params["FriendlyName"]
-      chatbot = DB.read("chatbot")
-      chatbot[:messaging_service] = {
+      messaging_service = {
         sid: sid,
         friendly_name: friendly_name,
         callback_url: params["StatusCallback"],
         inbound_url: params["InboundRequestUrl"],
       }
-      DB.write("chatbot", chatbot)
+      DB.write("messaging_service", messaging_service)
 
       content_type "application/json"
       status 200
@@ -210,13 +209,12 @@ module TwilioStub
       phone_number = Faker::PhoneNumber.cell_phone_in_e164
       phone_number_sid = "PN" + Faker::Crypto.md5
 
-      chatbot = DB.read("chatbot")
-      chatbot[:phone_numbers] ||= []
-      chatbot[:phone_numbers].push(
+      numbers = DB.read("phone_numbers") || []
+      numbers.push(
         phone_number: phone_number,
         phone_number_sid: phone_number_sid,
       )
-      DB.write("chatbot", chatbot)
+      DB.write("phone_numbers", numbers)
 
       content_type "application/json"
       status 200

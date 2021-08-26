@@ -350,9 +350,7 @@ RSpec.describe TwilioStub::App do
 
         post "/v1/Services", params
 
-        chatbot = TwilioStub::DB.read("chatbot")
-        expect(chatbot).to have_key(:messaging_service)
-        ms = chatbot[:messaging_service]
+        ms = TwilioStub::DB.read("messaging_service")
         expect(ms[:friendly_name]).to eq(friendly_name)
         expect(ms[:sid]).to eq(full_sid)
         expect(ms[:inbound_url]).to eq(inbound_url)
@@ -493,8 +491,6 @@ RSpec.describe TwilioStub::App do
 
     describe "POST /:api_v/Accounts/:account_id/IncomingPhoneNumbers.json" do
       it "returns status 200" do
-        TwilioStub::DB.write("chatbot", {})
-
         post "/v2/Accounts/123/IncomingPhoneNumbers.json"
 
         expect(last_response.status).to eq(200)
@@ -505,8 +501,6 @@ RSpec.describe TwilioStub::App do
         phone_number = "+4567"
         phone_number_sid = "PN" + md5
 
-        TwilioStub::DB.write("chatbot", {})
-
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).
           to receive(:cell_phone_in_e164).
@@ -514,11 +508,11 @@ RSpec.describe TwilioStub::App do
 
         post "/v2/Accounts/123/IncomingPhoneNumbers.json"
 
-        chatbot = TwilioStub::DB.read("chatbot")
+        numbers = TwilioStub::DB.read("phone_numbers")
 
-        expect(chatbot[:phone_numbers]).to be_an(Array)
-        expect(chatbot[:phone_numbers].count).to eq(1)
-        number = chatbot[:phone_numbers].first
+        expect(numbers).to be_an(Array)
+        expect(numbers.count).to eq(1)
+        number = numbers.first
         expect(number[:phone_number]).to eq(phone_number)
         expect(number[:phone_number_sid]).to eq(phone_number_sid)
       end
@@ -527,8 +521,6 @@ RSpec.describe TwilioStub::App do
         md5 = "123"
         phone_number = "+4567"
         phone_number_sid = "PN" + md5
-
-        TwilioStub::DB.write("chatbot", {})
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).

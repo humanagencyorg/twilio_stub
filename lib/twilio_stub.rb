@@ -30,8 +30,7 @@ module TwilioStub
   end
 
   def self.sent_sms_status_callback(sid:, status:)
-    chatbot = DB.read("chatbot")
-    ms = chatbot[:messaging_service]
+    ms = DB.read("messaging_service")
 
     Net::HTTP.post_form(
       URI(ms[:callback_url]),
@@ -47,7 +46,7 @@ module TwilioStub
   end
 
   def self.send_sms_response(from:, body:)
-    inbound_url = DB.read("chatbot").dig(:messaging_service, :inbound_url)
+    inbound_url = DB.read("messaging_service").dig(:inbound_url)
     params = {
       Body: body,
       From: from,

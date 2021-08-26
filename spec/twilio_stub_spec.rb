@@ -69,10 +69,8 @@ RSpec.describe TwilioStub do
       sid = "fake_sid"
       status = "fake_status"
       callback_url = "http://fake_url.com"
-      chatbot = {
-        messaging_service: {
-          callback_url: callback_url,
-        },
+      ms = {
+        callback_url: callback_url,
       }
       expected_body = {
         MessageSid: sid,
@@ -80,8 +78,8 @@ RSpec.describe TwilioStub do
       }
       allow(TwilioStub::DB).
         to receive(:read).
-        with("chatbot").
-        and_return(chatbot)
+        with("messaging_service").
+        and_return(ms)
       stub_request(:post, callback_url).
         to_return(status: 200)
 
@@ -112,10 +110,8 @@ RSpec.describe TwilioStub do
   describe ".send_sms_response" do
     it "calls inbound url with proper params" do
       inbound_url = "http://fake.url"
-      chatbot = {
-        messaging_service: {
-          inbound_url: inbound_url,
-        },
+      ms = {
+        inbound_url: inbound_url,
       }
       from = "12345678901"
       body = "message body"
@@ -126,8 +122,8 @@ RSpec.describe TwilioStub do
 
       allow(TwilioStub::DB).
         to receive(:read).
-        with("chatbot").
-        and_return(chatbot)
+        with("messaging_service").
+        and_return(ms)
       stub_request(:post, inbound_url).
         to_return(status: 200)
 
