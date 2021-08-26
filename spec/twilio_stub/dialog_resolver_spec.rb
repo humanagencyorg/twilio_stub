@@ -1337,7 +1337,7 @@ RSpec.describe TwilioStub::DialogResolver do
         parent_url = "some.url/fake.jpg"
         TwilioStub.media_mapper[public_id] = parent_url
         media_url = "http://res.cloudinary.com/hyz4jwpo6/"\
-          "image/upload/c_lfill,h_720,q_auto:best/#{public_id}.jpg"
+                    "image/upload/c_lfill,h_720,q_auto:best/#{public_id}.jpg"
 
         schema = {
           "tasks" => [

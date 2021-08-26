@@ -109,7 +109,7 @@ module TwilioStub
 
       if message == "fallback"
         {
-          "current_task": "fallback",
+          current_task: "fallback",
         }.to_json
       else
         status 200
@@ -119,9 +119,9 @@ module TwilioStub
           call
         message = DB.read(messages_key).last[:body]
         {
-          "response": {
-            "says": [
-              { "text": message },
+          response: {
+            says: [
+              { text: message },
             ],
           },
         }.to_json
@@ -145,7 +145,7 @@ module TwilioStub
     end
 
     post "/v1/Services" do
-      sid = "MG" + Faker::Crypto.md5
+      sid = "MG#{Faker::Crypto.md5}"
       friendly_name = params["FriendlyName"]
       messaging_service = {
         sid: sid,
@@ -171,7 +171,7 @@ module TwilioStub
     end
 
     post "/v1/Assistants" do
-      sid = "UA" + Faker::Crypto.md5
+      sid = "UA#{Faker::Crypto.md5}"
       friendly_name = params["FriendlyName"]
       unique_name = params["UniqueName"]
 
@@ -207,7 +207,7 @@ module TwilioStub
     post "/:api_version/Accounts/:account_id/IncomingPhoneNumbers.json" do
       Faker::Config.locale = "en-US"
       phone_number = Faker::PhoneNumber.cell_phone_in_e164
-      phone_number_sid = "PN" + Faker::Crypto.md5
+      phone_number_sid = "PN#{Faker::Crypto.md5}"
 
       numbers = DB.read("phone_numbers") || []
       numbers.push(
@@ -226,7 +226,7 @@ module TwilioStub
     end
 
     post "/:api_version/Accounts/:assistant_sid/Messages.json" do
-      message_sid = "MS" + Faker::Crypto.md5
+      message_sid = "MS#{Faker::Crypto.md5}"
       messages = DB.read("sms_messages")
       messages ||= []
       messages.push(
@@ -247,7 +247,7 @@ module TwilioStub
     end
 
     post "/:api_version/Accounts.json" do
-      account_sid = "AC" + Faker::Crypto.md5
+      account_sid = "AC#{Faker::Crypto.md5}"
 
       content_type "application/json"
       status 200

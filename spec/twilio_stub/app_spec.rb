@@ -3,7 +3,7 @@ require "rack/test"
 require "spec_helper"
 
 RSpec.describe TwilioStub::App do
-  module RSpecMixin
+  module RSpecMixin # rubocop:disable Lint/ConstantDefinitionInBlock
     include Rack::Test::Methods
 
     def app
@@ -47,10 +47,10 @@ RSpec.describe TwilioStub::App do
       it "returns status 200" do
         channel_name = "new_channel"
         channel_info = {
-          "grants": {
-            "identity": "visitor_1",
-            "chat": {
-              "service_sid": "sid",
+          grants: {
+            identity: "visitor_1",
+            chat: {
+              service_sid: "sid",
             },
           },
         }
@@ -69,10 +69,10 @@ RSpec.describe TwilioStub::App do
         identity = "identity"
         service_sid = "123"
         channel_info = {
-          "grants": {
-            "identity": identity,
-            "chat": {
-              "service_sid": service_sid,
+          grants: {
+            identity: identity,
+            chat: {
+              service_sid: service_sid,
             },
           },
         }
@@ -92,10 +92,10 @@ RSpec.describe TwilioStub::App do
       it "creates messages array for channel" do
         channel_name = "new_channel"
         channel_info = {
-          "grants": {
-            "identity": "visitor_1",
-            "chat": {
-              "service_sid": "sid",
+          grants: {
+            identity: "visitor_1",
+            chat: {
+              service_sid: "sid",
             },
           },
         }
@@ -268,7 +268,7 @@ RSpec.describe TwilioStub::App do
                params
 
           parsed = JSON.parse(last_response.body)
-          expect(parsed.dig("current_task")).to eq("fallback")
+          expect(parsed["current_task"]).to eq("fallback")
           expect(parsed.dig("response", "says", 0, "text")).to be_nil
         end
       end
@@ -404,11 +404,11 @@ RSpec.describe TwilioStub::App do
       it "writes assistant data to db" do
         friendly_name = "X AE A-12"
         md5 = "123"
-        sid = "UA" + md5
-        unique_name = friendly_name + "1"
+        sid = "UA#{md5}"
+        unique_name = "#{friendly_name}1"
         params = {
-          "FriendlyName": friendly_name,
-          "UniqueName": unique_name,
+          FriendlyName: friendly_name,
+          UniqueName: unique_name,
         }
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
@@ -425,11 +425,11 @@ RSpec.describe TwilioStub::App do
       it "returns assistant_sid and unique name" do
         friendly_name = "X AE A-12"
         md5 = "123"
-        sid = "UA" + md5
-        unique_name = friendly_name + "1"
+        sid = "UA#{md5}"
+        unique_name = "#{friendly_name}1"
         params = {
-          "FriendlyName": friendly_name,
-          "UniqueName": unique_name,
+          FriendlyName: friendly_name,
+          UniqueName: unique_name,
         }
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
@@ -448,7 +448,7 @@ RSpec.describe TwilioStub::App do
         assistant_sid = "AC123"
         development_stage = "fake_dev_stage"
         params = {
-          "DevelopmentStage": development_stage,
+          DevelopmentStage: development_stage,
         }
         TwilioStub::DB.write("chatbot", {})
 
@@ -461,7 +461,7 @@ RSpec.describe TwilioStub::App do
         assistant_sid = "AC123"
         development_stage = "fake_dev_stage"
         params = {
-          "DevelopmentStage": development_stage,
+          DevelopmentStage: development_stage,
         }
         TwilioStub::DB.write("chatbot", {})
 
@@ -479,7 +479,7 @@ RSpec.describe TwilioStub::App do
         development_stage = "fake_dev_stage"
         TwilioStub::DB.write("chatbot", {})
         params = {
-          "DevelopmentStage": development_stage,
+          DevelopmentStage: development_stage,
         }
 
         post "/v1/Assistants/#{assistant_sid}", params
@@ -499,7 +499,7 @@ RSpec.describe TwilioStub::App do
       it "writes phone number data to db" do
         md5 = "123"
         phone_number = "+4567"
-        phone_number_sid = "PN" + md5
+        phone_number_sid = "PN#{md5}"
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).
@@ -520,7 +520,7 @@ RSpec.describe TwilioStub::App do
       it "returns phone number" do
         md5 = "123"
         phone_number = "+4567"
-        phone_number_sid = "PN" + md5
+        phone_number_sid = "PN#{md5}"
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
         allow(Faker::PhoneNumber).

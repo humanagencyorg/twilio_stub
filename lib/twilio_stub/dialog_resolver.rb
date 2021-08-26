@@ -108,8 +108,7 @@ module TwilioStub
     def finish_listen_dialog
       result = read_data("messages").
         reverse.
-        detect { |m| m[:author] != "bot" }.
-        dig(:body)
+        detect { |m| m[:author] != "bot" }[:body]
 
       task_names = read_data("action").
         dig("listen", "tasks")
@@ -177,8 +176,8 @@ module TwilioStub
       validation = prepare_validate_attr(field)
 
       if Validator.valid?(result, field["validate"], field["type"])
-        if validation.dig("on_success")
-          handle_actions([validation.dig("on_success")])
+        if validation["on_success"]
+          handle_actions([validation["on_success"]])
         end
 
         results[field["name"]] = result
@@ -227,7 +226,7 @@ module TwilioStub
           "repeat_question",
         ) || to_repeat
       else
-        actions = defaults.dig("messages")
+        actions = defaults["messages"]
       end
 
       action = actions[error_index]
@@ -248,11 +247,11 @@ module TwilioStub
     def finish_collect_dialog(results)
       dialog_sid = read_data("dialog_sid")
       user_id = read_data("user_id")
-      body_results = results.map do |k, v|
-        [k, { answer: v }]
-      end.to_h
+      body_results = results.transform_values do |v|
+        { answer: v }
+      end
 
-      current_input = read_data("messages").last.dig(:body)
+      current_input = read_data("messages").last[:body]
 
       body = {
         DialogueSid: dialog_sid,
@@ -290,8 +289,8 @@ module TwilioStub
     end
 
     def find_task_by_name(name)
-      schema.dig("tasks").detect do |task|
-        task.dig("uniqueName") == name
+      schema["tasks"].detect do |task|
+        task["uniqueName"] == name
       end
     end
 

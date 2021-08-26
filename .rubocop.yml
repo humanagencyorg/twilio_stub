@@ -1,4 +1,5 @@
 AllCops:
+  NewCops: enable
   Exclude:
     - 'bin/**/*'
     - 'vendor/**/*' # For CI
@@ -6,7 +7,6 @@ AllCops:
 Metrics/BlockLength:
   CountComments: true  # count full line comments?
   Max: 25
-  ExcludedMethods: []
   Exclude:
     - "spec/**/*"
 
