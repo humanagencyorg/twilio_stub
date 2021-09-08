@@ -277,7 +277,7 @@ RSpec.describe TwilioStub::App do
           end
 
         post "/v2/#{account_sid}/#{assistant_sid}/custom/#{session_sid}", params
-        
+
         expect(TwilioStub::DialogResolver).to have_received(:new).
           with(session_sid, target: task_name)
       end
