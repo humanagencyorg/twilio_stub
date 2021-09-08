@@ -114,6 +114,48 @@ RSpec.describe TwilioStub::DialogResolver do
         expect(db_task).to eq(block_task)
       end
     end
+
+    context "when target task provided" do
+      it "looking for target action and execute it" do
+        # Preparation
+        channel_name = "fake"
+        messages_key = "channel_fake_messages"
+        task_name = "target_task_name"
+        schema = {
+          "tasks" => [
+            {
+              "uniqueName" => task_name,
+              "actions" => {
+                "actions" => [
+                  { "say" => "hello target" },
+                ],
+              },
+            },
+            {
+              "uniqueName" => "greeting",
+              "actions" => {
+                "actions" => [
+                  { "say" => "hello greeting" },
+                ],
+              },
+            },
+          ],
+        }
+
+        TwilioStub::DB.write("schema", schema)
+        TwilioStub::DB.write(messages_key, [])
+
+        # Execution
+        described_class.new(channel_name, target: task_name).call
+
+        # Expectation
+        messages = TwilioStub::DB.read(messages_key)
+        expect(messages.count).to eq(1)
+        expect(messages.first[:body]).to eq("hello target")
+        expect(messages.first[:author]).to eq("bot")
+        expect(messages.first[:sid].length).to eq(8)
+      end
+    end
   end
 
   context "when collection block" do
@@ -155,7 +197,7 @@ RSpec.describe TwilioStub::DialogResolver do
       TwilioStub::DB.write(messages_key, [])
 
       # Execution
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name, async: task).call
 
       # Expectation
       db_task = TwilioStub::DB.read("channel_fake_task")
@@ -447,13 +489,13 @@ RSpec.describe TwilioStub::DialogResolver do
       TwilioStub::DB.write(messages_key, [])
 
       # Execution
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name, async: task).call
       write_message.("Fake name")
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name, async: task).call
       write_message.("Fake second name")
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name, async: task).call
       write_message.("email@fake.com")
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name, async: task).call
 
       # Expectation
       db_results = TwilioStub::DB.read("channel_fake_results")
@@ -811,15 +853,15 @@ RSpec.describe TwilioStub::DialogResolver do
           TwilioStub::DB.write(messages_key, [])
 
           # Execution
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("no")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("no")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("yes")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("First name")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
 
           # Expectation
           db_results = TwilioStub::DB.read("channel_fake_results")
@@ -1029,43 +1071,43 @@ RSpec.describe TwilioStub::DialogResolver do
           TwilioStub::DB.write(messages_key, [])
 
           # Execution
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("fake")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("yes")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("fake first name")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("Name")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("fake second name")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("Second")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("fake.com")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("email@fake.com")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("Fake")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("Kyiv")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("Fake")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("Ukraine")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("FAKE")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("NY")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("871638461278364813")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("123123")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("871638461278364813")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
           write_message.("8716384612")
-          described_class.new(channel_name, task).call
+          described_class.new(channel_name, async: task).call
 
           # Expectation
           db_results = TwilioStub::DB.read("channel_fake_results")
@@ -1185,9 +1227,9 @@ RSpec.describe TwilioStub::DialogResolver do
       TwilioStub::DB.write(messages_key, [])
 
       # Execution
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name, async: task).call
       write_message.("carbonara")
-      described_class.new(channel_name, task).call
+      described_class.new(channel_name, async: task).call
 
       # Expectation
       db_results = TwilioStub::DB.read("channel_fake_results")
@@ -1305,11 +1347,11 @@ RSpec.describe TwilioStub::DialogResolver do
         TwilioStub::DB.write(messages_key, [])
 
         # Execution
-        described_class.new(channel_name, task).call
+        described_class.new(channel_name, async: task).call
         write_message.("banana")
-        described_class.new(channel_name, task).call
+        described_class.new(channel_name, async: task).call
         write_message.("carbonara")
-        described_class.new(channel_name, task).call
+        described_class.new(channel_name, async: task).call
 
         # Expectation
         db_results = TwilioStub::DB.read("channel_fake_results")

@@ -4,6 +4,36 @@ require "twilio_stub/app"
 require "twilio_stub/db"
 
 RSpec.describe TwilioStub do
+  describe "DEFAULT_SCHEMA" do
+    it "returns schema" do
+      expected = {
+        "uniqueName" => "",
+        "friendlyName" => "",
+        "logQueries" => true,
+        "defaults" => {},
+        "fieldTypes" => [],
+        "tasks" => [],
+        "styleSheet" => {},
+      }
+
+      expect(described_class::DEFAULT_SCHEMA).to eq(expected)
+    end
+  end
+
+  describe "DEFAULT_TASK_SCHEMA" do
+    it "returns schema" do
+      expected = {
+        "uniqueName" => "",
+        "sid" => "",
+        "fields" => [],
+        "actions" => {},
+        "samples" => [],
+      }
+
+      expect(described_class::DEFAULT_TASK_SCHEMA).to eq(expected)
+    end
+  end
+
   describe ".media_mapper" do
     it "allows to set and get media_mapper keys" do
       TwilioStub.media_mapper[:foo] = :bar

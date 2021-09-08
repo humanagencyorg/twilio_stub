@@ -6,9 +6,10 @@ require "twilio_stub/validator"
 
 module TwilioStub
   class DialogResolver
-    def initialize(channel_name, async_task = nil)
+    def initialize(channel_name, async: nil, target: nil)
       @channel_name = channel_name
-      @async_task = async_task
+      @target = target
+      @async_task = async
     end
 
     def call
@@ -35,7 +36,7 @@ module TwilioStub
     end
 
     def start_dialog
-      task = find_task_by_name("greeting")
+      task = find_task_by_name(@target || "greeting")
 
       write_data("dialog_sid", random_dialog_string)
       write_data("task", task)
