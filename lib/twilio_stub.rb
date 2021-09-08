@@ -6,6 +6,22 @@ module TwilioStub
   class Error < StandardError; end
 
   DB = Db.instance
+  DEFAULT_SCHEMA = {
+    "uniqueName" => "",
+    "friendlyName" => "",
+    "logQueries" => true,
+    "defaults" => {},
+    "fieldTypes" => [],
+    "tasks" => [],
+    "styleSheet" => {},
+  }.freeze
+  DEFAULT_TASK_SCHEMA = {
+    "sid" => "",
+    "uniqueName" => "",
+    "fields" => [],
+    "actions" => {},
+    "samples" => [],
+  }.freeze
 
   def self.boot
     App.boot_once

@@ -163,6 +163,7 @@ RSpec.describe TwilioStub::App do
         headers = { "CONTENT_TYPE" => "application/json" }
         db_key = "channel_#{channel_name}"
         TwilioStub::DB.write(db_key, {})
+        TwilioStub::DB.write("target_task", "fake_task_name")
 
         dialog_resolver = stub_dialog_resolver
 
@@ -170,7 +171,7 @@ RSpec.describe TwilioStub::App do
 
         expect(TwilioStub::DialogResolver).
           to have_received(:new).
-          with(channel_name, anything)
+          with(channel_name, hash_including(target: "fake_task_name"))
         expect(dialog_resolver).to have_received(:call)
       end
 
@@ -250,6 +251,37 @@ RSpec.describe TwilioStub::App do
         expect(parsed.dig("response", "says", 0, "text")).to eq(last_message)
       end
 
+      it "passes targeted task to DialogResolver" do
+        account_sid = "AC123"
+        assistant_sid = "UA123"
+        session_sid = "sms_chat_3"
+        task_name = "fake_targeted_task"
+        message = "Hello"
+        user_id = 3
+        last_message = "Last mesage"
+
+        params = {
+          Text: message,
+          UserId: user_id,
+          TargetTask: task_name,
+        }
+
+        dialog_resolver = instance_double(TwilioStub::DialogResolver)
+        allow(TwilioStub::DialogResolver).
+          to receive(:new).
+          and_return(dialog_resolver)
+        allow(dialog_resolver).
+          to receive(:call) do
+            messages_key = "channel_#{session_sid}_messages"
+            TwilioStub::DB.write(messages_key, [{ body: last_message }])
+          end
+
+        post "/v2/#{account_sid}/#{assistant_sid}/custom/#{session_sid}", params
+        
+        expect(TwilioStub::DialogResolver).to have_received(:new).
+          with(session_sid, target: task_name)
+      end
+
       context "when the message mentions fallback" do
         it "should return the fallback JSON" do
           account_sid = "AC123"
@@ -325,10 +357,26 @@ RSpec.describe TwilioStub::App do
 
     describe "POST /v2/Services/:assistant_id/Channels/:channel_sid/Webhooks" do
       it "returns status and empty json" do
-        post "/v2/Services/AC123/Channels/CH123/Webhooks"
+        url = "https://hello.com/fake?TargetTask=task"
+
+        post(
+          "/v2/Services/AC123/Channels/CH123/Webhooks",
+          "Configuration.Url" => url,
+        )
 
         expect(last_response.status).to eq(200)
         expect(JSON.parse(last_response.body)).to eq({})
+      end
+
+      it "saves target task to db" do
+        url = "https://hello.com/fake?TargetTask=super_fake_task"
+
+        post(
+          "/v2/Services/AC123/Channels/CH123/Webhooks",
+          "Configuration.Url" => url,
+        )
+
+        expect(TwilioStub::DB.read("target_task")).to eq("super_fake_task")
       end
     end
 
@@ -410,6 +458,15 @@ RSpec.describe TwilioStub::App do
           FriendlyName: friendly_name,
           UniqueName: unique_name,
         }
+        expected_schema_keys = %w[
+          uniqueName
+          friendlyName
+          logQueries
+          defaults
+          fieldTypes
+          tasks
+          styleSheet
+        ]
 
         allow(Faker::Crypto).to receive(:md5).and_return(md5)
 
@@ -420,6 +477,16 @@ RSpec.describe TwilioStub::App do
         expect(chatbot[:friendly_name]).to eq(friendly_name)
         expect(chatbot[:assistant_sid]).to eq(sid)
         expect(chatbot[:unique_name]).to eq(unique_name)
+
+        schema = TwilioStub::DB.read("schema")
+        expect(schema.keys).to match_array(expected_schema_keys)
+        expect(schema["uniqueName"]).to eq(unique_name)
+        expect(schema["friendlyName"]).to eq(friendly_name)
+        expect(schema["logQueries"]).to eq(true)
+        expect(schema["defaults"]).to eq({})
+        expect(schema["styleSheet"]).to eq({})
+        expect(schema["fieldTypes"]).to eq([])
+        expect(schema["tasks"]).to eq([])
       end
 
       it "returns assistant_sid and unique name" do
@@ -486,6 +553,231 @@ RSpec.describe TwilioStub::App do
 
         chatbot = TwilioStub::DB.read("chatbot")
         expect(chatbot[:development_stage]).to eq(development_stage)
+      end
+    end
+
+    describe "POST /v1/Assistants/:assistant_sid/StyleSheet" do
+      it "returns 200" do
+        assistant_sid = "AC123"
+        stylesheet = {
+          "some" => {
+            "fake" => [{ "style" => "sheet" }],
+          },
+        }
+        params = {
+          StyleSheet: stylesheet.to_json,
+        }
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA)
+
+        post "/v1/Assistants/#{assistant_sid}/StyleSheet", params
+
+        expect(last_response.status).to eq(200)
+      end
+
+      it "returns empty hash" do
+        assistant_sid = "AC123"
+        stylesheet = {
+          "some" => {
+            "fake" => [{ "style" => "sheet" }],
+          },
+        }
+        params = {
+          StyleSheet: stylesheet.to_json,
+        }
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA)
+
+        post "/v1/Assistants/#{assistant_sid}/StyleSheet", params
+
+        parsed = JSON.parse(last_response.body)
+        expect(parsed).to eq({})
+      end
+
+      it "writes stylesheet to db" do
+        assistant_sid = "AC123"
+        stylesheet = {
+          "some" => {
+            "fake" => [{ "style" => "sheet" }],
+          },
+        }
+        params = {
+          StyleSheet: stylesheet.to_json,
+        }
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA)
+
+        post "/v1/Assistants/#{assistant_sid}/StyleSheet", params
+
+        schema = TwilioStub::DB.read("schema")
+        expect(schema["styleSheet"]).to eq(stylesheet)
+      end
+    end
+
+    describe "POST /v1/Assistants/:assistant_sid/Defaults" do
+      it "returns 200" do
+        assistant_sid = "AC123"
+        defaults = {
+          "some" => {
+            "fake" => [{ "default" => "attrs" }],
+          },
+        }
+        params = {
+          Defaults: defaults.to_json,
+        }
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA)
+
+        post "/v1/Assistants/#{assistant_sid}/Defaults", params
+
+        expect(last_response.status).to eq(200)
+      end
+
+      it "returns empty hash" do
+        assistant_sid = "AC123"
+        defaults = {
+          "some" => {
+            "fake" => [{ "default" => "attrs" }],
+          },
+        }
+        params = {
+          Defaults: defaults.to_json,
+        }
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA)
+
+        post "/v1/Assistants/#{assistant_sid}/Defaults", params
+
+        parsed = JSON.parse(last_response.body)
+        expect(parsed).to eq({})
+      end
+
+      it "writes defaults to db" do
+        assistant_sid = "AC123"
+        defaults = {
+          "some" => {
+            "fake" => [{ "default" => "attrs" }],
+          },
+        }
+        params = {
+          Defaults: defaults.to_json,
+        }
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA)
+
+        post "/v1/Assistants/#{assistant_sid}/Defaults", params
+
+        schema = TwilioStub::DB.read("schema")
+        expect(schema["defaults"]).to eq(defaults)
+      end
+    end
+
+    describe "POST /v1/Assistants/:assistant_sid/Tasks" do
+      it "returns 200" do
+        assistant_sid = "AC123"
+        actions = {
+          "some" => {
+            "fake" => [{ "action" => "name" }],
+          },
+        }
+        uniq_name = "fake_name"
+        params = {
+          UniqueName: uniq_name,
+          Actions: actions.to_json,
+        }
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA)
+
+        post "/v1/Assistants/#{assistant_sid}/Tasks", params
+
+        expect(last_response.status).to eq(200)
+      end
+
+      it "returns sid" do
+        assistant_sid = "AC123"
+        md5 = "fake_md5"
+        sid = "UD#{md5}"
+        actions = {
+          "some" => {
+            "fake" => [{ "action" => "name" }],
+          },
+        }
+        uniq_name = "fake_name"
+        params = {
+          UniqueName: uniq_name,
+          Actions: actions.to_json,
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(md5)
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA)
+
+        post "/v1/Assistants/#{assistant_sid}/Tasks", params
+
+        parsed = JSON.parse(last_response.body)
+        expect(parsed).to eq({ "sid" => sid })
+      end
+
+      it "writes defaults to db" do
+        assistant_sid = "AC123"
+        md5 = "fake_md5"
+        sid = "UD#{md5}"
+        actions = {
+          "some" => {
+            "fake" => [{ "action" => "name" }],
+          },
+        }
+        uniq_name = "fake_name"
+        expected_tasks = [{
+          "sid" => sid,
+          "uniqueName" => uniq_name,
+          "fields" => [],
+          "actions" => actions,
+          "samples" => [],
+        }]
+        params = {
+          UniqueName: uniq_name,
+          Actions: actions.to_json,
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(md5)
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA)
+
+        post "/v1/Assistants/#{assistant_sid}/Tasks", params
+
+        schema = TwilioStub::DB.read("schema")
+        expect(schema["tasks"]).to eq(expected_tasks)
+      end
+
+      context "when schema already have tasks" do
+        it "adds new task" do
+          assistant_sid = "AC123"
+          md5 = "fake_md5"
+          sid = "UD#{md5}"
+          actions = {
+            "some" => {
+              "fake" => [{ "action" => "name" }],
+            },
+          }
+          uniq_name = "fake_name"
+          existing_task = {
+            "sid" => "fake_sid",
+            "uniqueName" => "fake_uniq_name",
+            "fields" => [],
+            "actions" => { "fake" => "action" },
+            "samples" => [],
+          }
+          expected_tasks = [existing_task, {
+            "sid" => sid,
+            "uniqueName" => uniq_name,
+            "fields" => [],
+            "actions" => actions,
+            "samples" => [],
+          }]
+          params = {
+            UniqueName: uniq_name,
+            Actions: actions.to_json,
+          }
+          allow(Faker::Crypto).to receive(:md5).and_return(md5)
+          current_schema = TwilioStub::DEFAULT_SCHEMA.dup
+          current_schema["tasks"] = [existing_task]
+          TwilioStub::DB.write("schema", current_schema)
+
+          post "/v1/Assistants/#{assistant_sid}/Tasks", params
+
+          schema = TwilioStub::DB.read("schema")
+          expect(schema["tasks"]).to eq(expected_tasks)
+        end
       end
     end
 

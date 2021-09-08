@@ -71,7 +71,7 @@ module TwilioStub
       Async do |task|
         task.sleep(1)
         DialogResolver.
-          new(channel_name, task).
+          new(channel_name, async: task, target: DB.read("target_task")).
           call
       end
 
@@ -115,7 +115,7 @@ module TwilioStub
         status 200
 
         DialogResolver.
-          new(channel_name).
+          new(channel_name, target: params[:TargetTask]).
           call
         message = DB.read(messages_key).last[:body]
         {
@@ -138,6 +138,11 @@ module TwilioStub
     end
 
     post "/v2/Services/:assistant_id/Channels/:channel_sid/Webhooks" do
+      url = params["Configuration.Url"]
+      task = url.match(/TargetTask=(.+)$/)[1]
+
+      DB.write("target_task", task)
+
       content_type "application/json"
       status 200
 
@@ -182,6 +187,14 @@ module TwilioStub
         unique_name: unique_name,
       )
 
+      DB.write(
+        "schema",
+        DEFAULT_SCHEMA.merge(
+          "uniqueName" => unique_name,
+          "friendlyName" => friendly_name,
+        ),
+      )
+
       content_type "application/json"
       status 200
 
@@ -202,6 +215,44 @@ module TwilioStub
         sid: sid,
         development_stage: development_stage,
       }.to_json
+    end
+
+    post "/v1/Assistants/:assistant_sid/StyleSheet" do
+      schema = DB.read("schema")
+      DB.write(
+        "schema",
+        schema.merge("styleSheet" => JSON.parse(params[:StyleSheet])),
+      )
+
+      status 200
+      {}.to_json
+    end
+
+    post "/v1/Assistants/:assistant_sid/Defaults" do
+      schema = DB.read("schema")
+      DB.write(
+        "schema",
+        schema.merge("defaults" => JSON.parse(params[:Defaults])),
+      )
+
+      status 200
+      {}.to_json
+    end
+
+    post "/v1/Assistants/:assistant_sid/Tasks" do
+      sid = "UD#{Faker::Crypto.md5}"
+      schema = DB.read("schema")
+      task = DEFAULT_TASK_SCHEMA.merge(
+        "sid" => sid,
+        "uniqueName" => params[:UniqueName],
+        "actions" => JSON.parse(params[:Actions]),
+      )
+      schema["tasks"].push(task)
+
+      DB.write("schema", schema)
+
+      status 200
+      { sid: sid }.to_json
     end
 
     post "/:api_version/Accounts/:account_id/IncomingPhoneNumbers.json" do
