@@ -781,6 +781,194 @@ RSpec.describe TwilioStub::App do
       end
     end
 
+    describe "POST /v1/Assistants/:assistant_sid/Tasks/:task_id/Samples" do
+      it "returns 200" do
+        assistant_sid = "AC123"
+        task_sid = "UD123"
+        task = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+          "sid" => task_sid,
+        )
+        schema = TwilioStub::DEFAULT_SCHEMA.merge(
+          "tasks" => [task],
+        )
+        TwilioStub::DB.write("schema", schema)
+        params = {
+          Language: "en-US",
+          TaggedText: "fake tagged text",
+        }
+        url = [
+          "v1",
+          "Assistants",
+          assistant_sid,
+          "Tasks",
+          task_sid,
+          "Samples",
+        ].join("/")
+
+        post "/#{url}", params
+
+        expect(last_response.status).to eq(200)
+      end
+
+      it "returns sid" do
+        assistant_sid = "AC123"
+        task_sid = "UD123"
+        md5 = "fake_md5"
+        sample_sid = "UF#{md5}"
+        task = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+          "sid" => task_sid,
+        )
+        schema = TwilioStub::DEFAULT_SCHEMA.merge(
+          "tasks" => [task],
+        )
+        TwilioStub::DB.write("schema", schema)
+        params = {
+          Language: "en-US",
+          TaggedText: "fake tagged text",
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(md5)
+        url = [
+          "v1",
+          "Assistants",
+          assistant_sid,
+          "Tasks",
+          task_sid,
+          "Samples",
+        ].join("/")
+
+        post "/#{url}", params
+
+        parsed = JSON.parse(last_response.body)
+        expect(parsed).to eq({ "sid" => sample_sid })
+      end
+
+      it "writes sample to db" do
+        assistant_sid = "AC123"
+        task_sid = "UD123"
+        md5 = "fake_md5"
+        sample_sid = "UF#{md5}"
+        task = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+          "sid" => task_sid,
+        )
+        schema = TwilioStub::DEFAULT_SCHEMA.merge(
+          "tasks" => [task],
+        )
+        TwilioStub::DB.write("schema", schema)
+        params = {
+          Language: "en-US",
+          TaggedText: "fake tagged text",
+        }
+        expected_samples = [
+          {
+            "sid" => sample_sid,
+            "Language" => "en-US",
+            "TaggedText" => "fake tagged text",
+          },
+        ]
+        allow(Faker::Crypto).to receive(:md5).and_return(md5)
+        url = [
+          "v1",
+          "Assistants",
+          assistant_sid,
+          "Tasks",
+          task_sid,
+          "Samples",
+        ].join("/")
+
+        post "/#{url}", params
+
+        schema = TwilioStub::DB.read("schema")
+        task = schema["tasks"].detect { |t| t["sid"] == task_sid }
+        expect(task["samples"]).to eq(expected_samples)
+      end
+
+      context "when schema already have tasks" do
+        it "adds new task" do
+          assistant_sid = "AC123"
+          task_sid = "UD123"
+          md5 = "fake_md5"
+          sample_sid = "UF#{md5}"
+          sample = {
+            "sid" => "fake_first_sid",
+            "Language" => "fake lang",
+            "TaggedText" => "fake lang",
+          }
+          task1 = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+            "sid" => "fake task sid",
+            "samples" => [sample],
+          )
+          task2 = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+            "sid" => task_sid,
+            "samples" => [sample],
+          )
+          task3 = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+            "sid" => "fake task sid 2",
+            "samples" => [sample],
+          )
+          schema = TwilioStub::DEFAULT_SCHEMA.merge(
+            "tasks" => [
+              task1,
+              task2,
+              task3,
+            ],
+          )
+          TwilioStub::DB.write("schema", schema)
+          params = {
+            Language: "en-US",
+            TaggedText: "fake tagged text",
+          }
+          expected_task = task2.merge(
+            "samples" => [
+              sample,
+              {
+                "sid" => sample_sid,
+                "Language" => "en-US",
+                "TaggedText" => "fake tagged text",
+              },
+            ],
+          )
+          expected_tasks = [
+            task1,
+            expected_task,
+            task3,
+          ]
+          allow(Faker::Crypto).to receive(:md5).and_return(md5)
+          url = [
+            "v1",
+            "Assistants",
+            assistant_sid,
+            "Tasks",
+            task_sid,
+            "Samples",
+          ].join("/")
+
+          post "/#{url}", params
+
+          schema = TwilioStub::DB.read("schema")
+          expect(schema["tasks"]).to eq(expected_tasks)
+        end
+      end
+    end
+
+    describe "POST /v1/Assistants/:assistant_sid/ModelBuilds" do
+      it "returns 200" do
+        sid = "fake_assistant_sid"
+
+        post "/v1/Assistants/#{sid}/ModelBuilds"
+
+        expect(last_response.status).to eq(200)
+      end
+
+      it "returns empty json" do
+        sid = "fake_assistant_sid"
+
+        post "/v1/Assistants/#{sid}/ModelBuilds"
+
+        parsed = JSON.parse(last_response.body)
+        expect(parsed).to eq({})
+      end
+    end
+
     describe "POST /:api_v/Accounts/:account_id/IncomingPhoneNumbers.json" do
       it "returns status 200" do
         post "/v2/Accounts/123/IncomingPhoneNumbers.json"

@@ -255,6 +255,29 @@ module TwilioStub
       { sid: sid }.to_json
     end
 
+    post "/v1/Assistants/:assistant_sid/Tasks/:task_sid/Samples" do
+      sid = "UF#{Faker::Crypto.md5}"
+      schema = DB.read("schema")
+      schema["tasks"].each do |task|
+        if task["sid"] == params["task_sid"]
+          task["samples"].push({
+            "sid" => sid,
+            "Language" => params["Language"],
+            "TaggedText" => params["TaggedText"],
+          })
+        end
+      end
+      DB.write("schema", schema)
+
+      status 200
+      { sid: sid }.to_json
+    end
+
+    post "/v1/Assistants/:assistant_sid/ModelBuilds" do
+      status 200
+      {}.to_json
+    end
+
     post "/:api_version/Accounts/:account_id/IncomingPhoneNumbers.json" do
       Faker::Config.locale = "en-US"
       phone_number = Faker::PhoneNumber.cell_phone_in_e164
