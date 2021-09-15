@@ -261,10 +261,10 @@ module TwilioStub
       schema["tasks"].each do |task|
         if task["sid"] == params["task_sid"]
           task["samples"].push({
-            "sid" => sid,
-            "Language" => params["Language"],
-            "TaggedText" => params["TaggedText"],
-          })
+                                 "sid" => sid,
+                                 "Language" => params["Language"],
+                                 "TaggedText" => params["TaggedText"],
+                               })
         end
       end
       DB.write("schema", schema)
