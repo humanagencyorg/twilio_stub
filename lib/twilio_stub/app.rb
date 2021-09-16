@@ -255,6 +255,18 @@ module TwilioStub
       { sid: sid }.to_json
     end
 
+    delete "/v1/Assistants/:assistant_sid/Tasks/:task_sid" do
+      schema = DB.read("schema")
+      tasks = schema["tasks"].reject do |task|
+        task["sid"] == params[:task_sid]
+      end
+      schema["tasks"] = tasks
+      DB.write("schema", schema)
+
+      status 200
+      {}.to_json
+    end
+
     post "/v1/Assistants/:assistant_sid/Tasks/:task_sid/Samples" do
       sid = "UF#{Faker::Crypto.md5}"
       schema = DB.read("schema")
@@ -271,6 +283,23 @@ module TwilioStub
 
       status 200
       { sid: sid }.to_json
+    end
+
+    delete "/v1/Assistants/:assistant_sid/Tasks/:task_sid/Samples/:sample_sid" do # rubocop:disable Layout/LineLength
+      schema = DB.read("schema")
+      schema["tasks"].each do |task|
+        if task["sid"] == params["task_sid"]
+          samples = task["samples"].reject do |sample|
+            sample["sid"] == params[:sample_sid]
+          end
+
+          task["samples"] = samples
+        end
+      end
+      DB.write("schema", schema)
+
+      status 200
+      {}.to_json
     end
 
     post "/v1/Assistants/:assistant_sid/ModelBuilds" do

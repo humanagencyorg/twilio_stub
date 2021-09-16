@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    twilio_stub (0.1.13)
+    twilio_stub (0.1.14)
       async (~> 1.26)
       capybara
       faker (~> 2.11)
@@ -114,7 +114,7 @@ GEM
     sinatra-cross_origin (0.4.0)
     tilt (2.0.10)
     timers (4.3.3)
-    unicode-display_width (2.0.0)
+    unicode-display_width (2.1.0)
     webmock (3.14.0)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
