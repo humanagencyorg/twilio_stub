@@ -781,6 +781,60 @@ RSpec.describe TwilioStub::App do
       end
     end
 
+    describe "DELETE /v1/Assistants/:assistant_sid/Tasks/:task_id" do
+      it "returns 200" do
+        assistant_sid = "AC123"
+        task_sid = "UD123"
+        task = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+          "sid" => task_sid,
+          "samples" => [],
+        )
+        schema = TwilioStub::DEFAULT_SCHEMA.merge(
+          "tasks" => [task],
+        )
+        TwilioStub::DB.write("schema", schema)
+        url = [
+          "v1",
+          "Assistants",
+          assistant_sid,
+          "Tasks",
+          task_sid,
+        ].join("/")
+
+        delete "/#{url}"
+
+        expect(last_response.status).to eq(200)
+        expect(JSON.parse(last_response.body)).to eq({})
+      end
+
+      it "deletes sample from array" do
+        assistant_sid = "AC123"
+        task_sid = "UD123"
+        other_task = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+          "sid" => "other_task_sid",
+        )
+        task = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+          "sid" => task_sid,
+        )
+        schema = TwilioStub::DEFAULT_SCHEMA.merge(
+          "tasks" => [task, other_task],
+        )
+        TwilioStub::DB.write("schema", schema)
+        url = [
+          "v1",
+          "Assistants",
+          assistant_sid,
+          "Tasks",
+          task_sid,
+        ].join("/")
+
+        delete "/#{url}"
+
+        schema = TwilioStub::DB.read("schema")
+        expect(schema["tasks"]).to eq([other_task])
+      end
+    end
+
     describe "POST /v1/Assistants/:assistant_sid/Tasks/:task_id/Samples" do
       it "returns 200" do
         assistant_sid = "AC123"
@@ -947,6 +1001,77 @@ RSpec.describe TwilioStub::App do
           schema = TwilioStub::DB.read("schema")
           expect(schema["tasks"]).to eq(expected_tasks)
         end
+      end
+    end
+
+    describe(
+      "DELETE /v1/Assistants/:assistant_sid/Tasks/:task_id/Samples/:sample_sid",
+    ) do
+      it "returns 200" do
+        assistant_sid = "AC123"
+        task_sid = "UD123"
+        sample_sid = "UF123"
+        task = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+          "sid" => task_sid,
+          "samples" => [{
+            "sid" => sample_sid,
+            "some" => "fake",
+          }],
+        )
+        schema = TwilioStub::DEFAULT_SCHEMA.merge(
+          "tasks" => [task],
+        )
+        TwilioStub::DB.write("schema", schema)
+        url = [
+          "v1",
+          "Assistants",
+          assistant_sid,
+          "Tasks",
+          task_sid,
+          "Samples",
+          sample_sid,
+        ].join("/")
+
+        delete "/#{url}"
+
+        expect(last_response.status).to eq(200)
+        expect(JSON.parse(last_response.body)).to eq({})
+      end
+
+      it "deletes sample from array" do
+        assistant_sid = "AC123"
+        task_sid = "UD123"
+        sample_sid = "UF123"
+        other_sample = {
+          "sid" => "UF3456",
+          "fake" => "data",
+        }
+        task = TwilioStub::DEFAULT_TASK_SCHEMA.merge(
+          "sid" => task_sid,
+          "samples" => [{
+            "sid" => sample_sid,
+            "some" => "fake",
+          }, other_sample],
+        )
+        schema = TwilioStub::DEFAULT_SCHEMA.merge(
+          "tasks" => [task],
+        )
+        TwilioStub::DB.write("schema", schema)
+        url = [
+          "v1",
+          "Assistants",
+          assistant_sid,
+          "Tasks",
+          task_sid,
+          "Samples",
+          sample_sid,
+        ].join("/")
+
+        delete "/#{url}"
+
+        schema = TwilioStub::DB.read("schema")
+        task = schema["tasks"].first
+        expect(task["samples"]).to eq([other_sample])
       end
     end
 
