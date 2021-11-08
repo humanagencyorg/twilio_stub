@@ -135,6 +135,38 @@ RSpec.describe TwilioStub do
 
       expect(result).to eq(last_message)
     end
+
+    context "when no message have been sent" do
+      it "returns nil" do
+        allow(TwilioStub::DB).
+          to receive(:read).
+          with("sms_messages").
+          and_return(nil)
+
+        result = described_class.last_sent_message
+
+        expect(result).to eq(nil)
+      end
+    end
+  end
+
+  describe ".sent_messages" do
+    it "returns all messages sent" do
+      first_message = "first message"
+      last_message = "last_message"
+      messages = [first_message, last_message]
+
+      allow(TwilioStub::DB).
+        to receive(:read).
+        with("sms_messages").
+        and_return(messages)
+
+      result = described_class.sent_messages
+
+      expect(result.count).to eq(2)
+      expect(result).to include(first_message)
+      expect(result).to include(last_message)
+    end
   end
 
   describe ".send_sms_response" do

@@ -58,7 +58,11 @@ module TwilioStub
   end
 
   def self.last_sent_message
-    DB.read("sms_messages").last
+    DB.read("sms_messages")&.last
+  end
+
+  def self.sent_messages
+    DB.read("sms_messages")
   end
 
   def self.send_sms_response(from:, body:)
