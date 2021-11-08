@@ -64,6 +64,7 @@ module TwilioStub
   def self.sent_messages
     DB.read("sms_messages")
   end
+
   def self.send_sms_response(from:, body:)
     inbound_url = DB.read("messaging_service")[:inbound_url]
     params = {
