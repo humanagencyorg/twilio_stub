@@ -11,12 +11,12 @@ jobs:
       with:
         ruby-version: 2.7.2
     - run: ruby -v
-    # - uses: actions/cache@v1
-      # with:
-        # path: vendor/bundle
-        # key: bundle-use-ruby-${{ matrix.os }}-${{ matrix.ruby }}-${{ hashFiles('**/Gemfile.lock') }}
-        # restore-keys: |
-          # bundle-use-ruby-${{ matrix.os }}-${{ matrix.ruby }}-
+    - uses: actions/cache@v1
+      with:
+        path: vendor/bundle
+        key: bundle-use-ruby-${{ matrix.os }}-${{ matrix.ruby }}-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          bundle-use-ruby-${{ matrix.os }}-${{ matrix.ruby }}-
     - name: bundle install
       run: |
         bundle config path vendor/bundle
