@@ -52,4 +52,5 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.add_runtime_dependency "sinatra", "~> 2.0"
   spec.add_runtime_dependency "sinatra-cross_origin", "~> 0.4"
   spec.add_runtime_dependency "webmock"
+  spec.metadata["rubygems_mfa_required"] = "true"
 end

@@ -20,7 +20,7 @@ module TwilioStub
       file_path = File.join(File.dirname(__FILE__), "/assets/sdk.js")
       status 200
 
-      IO.
+      File.
         read(file_path).
         sub(/\#HOST\#/, TwilioStub.twilio_host)
     end
