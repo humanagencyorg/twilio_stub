@@ -87,6 +87,7 @@ module TwilioStub
         user_id = read_data("user_id")
         url = action.dig("redirect", "uri")
         body = {
+          Memory: { twilio: { "custom.#{@channel_name}" => {} } }.to_json,
           DialogueSid: dialog_sid,
           UserIdentifier: user_id,
         }
@@ -260,6 +261,7 @@ module TwilioStub
         CurrentInput: current_input,
         Memory: {
           twilio: {
+            "custom.#{@channel_name}" => {},
             collected_data: {
               data_collect: {
                 answers: body_results,

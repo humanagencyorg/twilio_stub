@@ -373,6 +373,7 @@ RSpec.describe TwilioStub::DialogResolver do
         CurrentInput: "test answer",
         Memory: {
           "twilio" => {
+            "custom.#{channel_name}" => {},
             "collected_data" => {
               "data_collect" => {
                 "answers" => {
@@ -459,6 +460,7 @@ RSpec.describe TwilioStub::DialogResolver do
             "UserIdentifier" => user_id,
             "Memory" => {
               "twilio" => {
+                "custom.#{channel_name}" => {},
                 "collected_data" => {
                   "data_collect" => {
                     "answers" => {
@@ -824,6 +826,7 @@ RSpec.describe TwilioStub::DialogResolver do
                 "UserIdentifier" => user_id,
                 "Memory" => {
                   "twilio" => {
+                    "custom.#{channel_name}" => {},
                     "collected_data" => {
                       "data_collect" => {
                         "answers" => {
@@ -1036,6 +1039,7 @@ RSpec.describe TwilioStub::DialogResolver do
                 "UserIdentifier" => user_id,
                 "Memory" => {
                   "twilio" => {
+                    "custom.#{channel_name}" => {},
                     "collected_data" => {
                       "data_collect" => {
                         "answers" => {
@@ -1208,7 +1212,15 @@ RSpec.describe TwilioStub::DialogResolver do
       TwilioStub::DB.write("channel_#{channel_name}_user_id", user_id)
       stub_request(:post, "http://fake.com/carbonara").
         with(
-          body: { "DialogueSid" => /.*/, "UserIdentifier" => user_id },
+          body: {
+            "DialogueSid" => /.*/,
+            "UserIdentifier" => user_id,
+            "Memory" => {
+              "twilio" => {
+                "custom.#{channel_name}" => {},
+              },
+            }.to_json,
+          },
           headers: {
             "Accept" => "*/*",
             "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
@@ -1328,7 +1340,15 @@ RSpec.describe TwilioStub::DialogResolver do
         TwilioStub::DB.write("channel_#{channel_name}_user_id", user_id)
         stub_request(:post, "http://fake.com/carbonara").
           with(
-            body: { "DialogueSid" => /.*/, "UserIdentifier" => user_id },
+            body: {
+              "DialogueSid" => /.*/,
+              "UserIdentifier" => user_id,
+              "Memory" => {
+                "twilio" => {
+                  "custom.#{channel_name}" => {},
+                },
+              }.to_json,
+            },
             headers: {
               "Accept" => "*/*",
               "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
