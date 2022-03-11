@@ -171,21 +171,23 @@ RSpec.describe TwilioStub do
 
   describe ".send_sms_response" do
     it "calls inbound url with proper params" do
+      md5 = "fake_md_5"
       inbound_url = "http://fake.url"
-      ms = {
-        inbound_url: inbound_url,
-      }
+      ms = { inbound_url: inbound_url }
       from = "12345678901"
       body = "message body"
       request_body = {
         Body: body,
         From: from,
+        SmsMessageSid: "MS#{md5}",
       }
 
-      allow(TwilioStub::DB).
-        to receive(:read).
-        with("messaging_service").
+      allow(TwilioStub::DB).to receive(:read).with("messaging_service").
         and_return(ms)
+      allow(TwilioStub::DB).to receive(:read).with("sms_messages").
+        and_return([])
+      allow(TwilioStub::DB).to receive(:write)
+      allow(Faker::Crypto).to receive(:md5).and_return(md5)
       stub_request(:post, inbound_url).
         to_return(status: 200)
 
@@ -193,6 +195,37 @@ RSpec.describe TwilioStub do
 
       expect(WebMock).to have_requested(:post, inbound_url).
         with(body: request_body)
+    end
+
+    it "creates sms_messages in DB" do
+      md5 = "fake_md_5"
+      inbound_url = "http://fake.url"
+      ms = { sid: "fake_message_sid", inbound_url: inbound_url }
+      from = "12345678901"
+      body = "message body"
+      expected_sms = {
+        sid: "MS#{md5}",
+        body: body,
+        ms_sid: ms[:sid],
+        from: from,
+        status: "delivered",
+        num_media: "0",
+        num_segments: "1",
+      }
+
+      allow(TwilioStub::DB).to receive(:read).with("messaging_service").
+        and_return(ms)
+      allow(TwilioStub::DB).to receive(:read).with("sms_messages").
+        and_return([])
+      allow(TwilioStub::DB).to receive(:write)
+      allow(Faker::Crypto).to receive(:md5).and_return(md5)
+      stub_request(:post, inbound_url).
+        to_return(status: 200)
+
+      described_class.send_sms_response(from: from, body: body)
+
+      expect(TwilioStub::DB).to have_received(:write).
+        with("sms_messages", [expected_sms])
     end
   end
 end
