@@ -337,6 +337,9 @@ module TwilioStub
         body: params[:Body],
         ms_sid: params[:MessagingServiceSid],
         to: params[:To],
+        status: "delivered",
+        num_media: "0",
+        num_segments: "1",
         assistant_sid: params[:assistant_sid],
       )
       DB.write("sms_messages", messages)
@@ -358,6 +361,17 @@ module TwilioStub
       {
         sid: account_sid,
       }.to_json
+    end
+
+    get "/:api_version/Accounts/:assistant_sid/Messages/:message_sid.json" do
+      message = DB.read("sms_messages").detect do |m|
+        m[:sid] == params[:message_sid]
+      end
+
+      content_type "application/json"
+      status 200
+
+      message.slice(:sid, :status, :num_media, :num_segments).to_json
     end
   end
 end

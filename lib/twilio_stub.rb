@@ -1,6 +1,7 @@
 require "twilio_stub/version"
 require "twilio_stub/app"
 require "webmock"
+require "faker"
 
 module TwilioStub
   class Error < StandardError; end
@@ -66,15 +67,27 @@ module TwilioStub
   end
 
   def self.send_sms_response(from:, body:)
-    inbound_url = DB.read("messaging_service")[:inbound_url]
+    mservice = DB.read("messaging_service")
+    message_sid = "MS#{Faker::Crypto.md5}"
+    messages = DB.read("sms_messages")
+    messages ||= []
+    messages.push(
+      sid: message_sid,
+      body: body,
+      ms_sid: mservice[:sid],
+      from: from,
+      status: "delivered",
+      num_media: "0",
+      num_segments: "1",
+    )
+    DB.write("sms_messages", messages)
+
     params = {
       Body: body,
       From: from,
+      SmsMessageSid: message_sid,
     }
 
-    Net::HTTP.post_form(
-      URI(inbound_url),
-      params,
-    )
+    Net::HTTP.post_form(URI(mservice[:inbound_url]), params)
   end
 end

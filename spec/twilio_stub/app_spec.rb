@@ -1159,6 +1159,35 @@ RSpec.describe TwilioStub::App do
       end
     end
 
+    describe "GET /:api_version/Accounts/:assistant_sid/Messages/:message_sid.json" do # rubocop:disable Layout/LineLength
+      it "returns sms_message" do
+        message = {
+          sid: "fake_sms_sid",
+          body: "fake_body",
+          ms_sid: "fake_sid",
+          from: "fake_from",
+          status: "delivered",
+          num_media: "0",
+          num_segments: "1",
+          other: "other",
+        }
+        messages = [
+          { sid: "other_sid" },
+          message,
+          { sid: "other_sid2" },
+        ]
+        expected_message = message.slice(:sid, :status, :num_media,
+                                         :num_segments).transform_keys(&:to_s)
+        TwilioStub::DB.write("sms_messages", messages)
+
+        get "/2010-10-23/Accounts/fake_assistant_sid/Messages/#{message[:sid]}.json" # rubocop:disable Layout/LineLength
+
+        expect(last_response.status).to eq(200)
+        response = JSON.parse(last_response.body)
+        expect(response).to eq(expected_message)
+      end
+    end
+
     describe "POST /:api_version/Accounts/:assistant_sid/Messages.json" do
       it "returns message sid" do
         assistant_sid = "fake_assistant_sid"
@@ -1240,6 +1269,9 @@ RSpec.describe TwilioStub::App do
           ms_sid: message_service_sid1,
           to: to1,
           assistant_sid: assistant_sid,
+          status: "delivered",
+          num_media: "0",
+          num_segments: "1",
         )
         expect(messages.last).to eq(
           sid: full_sid2,
@@ -1247,6 +1279,9 @@ RSpec.describe TwilioStub::App do
           ms_sid: message_service_sid2,
           to: to2,
           assistant_sid: assistant_sid,
+          status: "delivered",
+          num_media: "0",
+          num_segments: "1",
         )
       end
     end
