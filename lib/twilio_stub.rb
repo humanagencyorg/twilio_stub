@@ -90,4 +90,22 @@ module TwilioStub
 
     Net::HTTP.post_form(URI(mservice[:inbound_url]), params)
   end
+
+  def self.create_sample_for_task(task_sid:, tagged_text:, language: "en-US")
+    schema = TwilioStub::DB.read("schema")
+    sample = {
+      "sid" => "UF#{Faker::Crypto.md5}",
+      "Language" => language,
+      "TaggedText" => tagged_text,
+    }
+
+    schema["tasks"].
+      detect { |task| task["sid"] == task_sid }.
+      fetch("samples", []).
+      push(sample)
+
+    TwilioStub::DB.write("schema", schema)
+
+    sample
+  end
 end
