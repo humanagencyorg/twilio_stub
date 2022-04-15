@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    twilio_stub (0.1.18)
+    twilio_stub (0.1.19)
       async (~> 1.26)
       capybara
       faker (~> 2.11)
@@ -47,12 +47,10 @@ GEM
     matrix (0.4.2)
     method_source (1.0.0)
     mini_mime (1.1.2)
-    mini_portile2 (2.8.0)
     mustermann (1.1.1)
       ruby2_keywords (~> 0.0.1)
     nio4r (2.5.8)
-    nokogiri (1.13.4)
-      mini_portile2 (~> 2.8.0)
+    nokogiri (1.13.4-x86_64-linux)
       racc (~> 1.4)
     parallel (1.21.0)
     parser (3.1.0.0)
