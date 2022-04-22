@@ -50,7 +50,7 @@ module TwilioStub
     end
 
     def find_task_by_sample
-      TwilioStub::DB.read("schema")["tasks"].detect do |task|
+      schema["tasks"].detect do |task|
         task["samples"]&.any? { |sample| sample["TaggedText"] == @body }
       end
     end

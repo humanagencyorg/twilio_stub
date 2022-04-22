@@ -108,4 +108,14 @@ module TwilioStub
 
     sample
   end
+
+  def self.fetch_task_samples(task_sid:)
+    tasks = TwilioStub::DB.read("schema")["tasks"]
+    return if tasks.nil? || tasks.empty?
+
+    task = tasks.detect { |item| item["sid"] == task_sid }
+    return if task.nil?
+
+    task["samples"]
+  end
 end

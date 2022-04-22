@@ -228,4 +228,116 @@ RSpec.describe TwilioStub do
         with("sms_messages", [expected_sms])
     end
   end
+
+  describe ".create_sample_for_task" do
+    it "creates new sample for task" do
+      task_sid = "UD#{Faker::Crypto.unique.md5}"
+      create_task(sid: task_sid)
+
+      described_class.create_sample_for_task(
+        task_sid: task_sid,
+        tagged_text: "pizza",
+      )
+
+      expect(TwilioStub::DB.read("schema").dig("tasks", 0, "samples")).to match(
+        [
+          {
+            "sid" => match(/UF.+/),
+            "Language" => "en-US",
+            "TaggedText" => "pizza",
+          },
+        ],
+      )
+    end
+
+    it "returns new sample" do
+      task_sid = "UD#{Faker::Crypto.unique.md5}"
+      create_task(sid: task_sid)
+
+      sample = described_class.create_sample_for_task(
+        task_sid: task_sid,
+        tagged_text: "pizza",
+      )
+
+      expect(sample).to match(
+        {
+          "sid" => match(/UF.+/),
+          "Language" => "en-US",
+          "TaggedText" => "pizza",
+        },
+      )
+    end
+  end
+
+  describe ".fetch_task_samples" do
+    it "returns samples of chatbot task" do
+      task_sid = "UD#{Faker::Crypto.unique.md5}"
+      samples = [
+        {
+          "sid" => "UF#{Faker::Crypto.unique.md5}",
+          "Language" => "en-US",
+          "TaggedText" => "pizza",
+        },
+        {
+          "sid" => "UF#{Faker::Crypto.unique.md5}",
+          "Language" => "en-US",
+          "TaggedText" => "news",
+        },
+      ]
+
+      create_task(sid: task_sid, samples: samples)
+      create_task(
+        sid: "UD#{Faker::Crypto.unique.md5}",
+        samples: [
+          {
+            "sid" => "UF#{Faker::Crypto.unique.md5}",
+            "Language" => "en-US",
+            "TaggedText" => "news",
+          },
+        ],
+      )
+
+      expect(described_class.fetch_task_samples(task_sid: task_sid)).
+        to match_array(samples)
+    end
+
+    context "when there is no task with given sid" do
+      it "returns nil" do
+        task_sid = "UD#{Faker::Crypto.unique.md5}"
+
+        create_task(
+          sid: "UD#{Faker::Crypto.unique.md5}",
+          samples: [
+            {
+              "sid" => "UF#{Faker::Crypto.unique.md5}",
+              "Language" => "en-US",
+              "TaggedText" => "news",
+            },
+          ],
+        )
+
+        expect(described_class.fetch_task_samples(task_sid: task_sid)).to be_nil
+      end
+    end
+
+    context "when there is no tasks" do
+      it "returns nil" do
+        task_sid = "UD#{Faker::Crypto.unique.md5}"
+        TwilioStub::DB.write("schema", TwilioStub::DEFAULT_SCHEMA.dup)
+
+        expect(described_class.fetch_task_samples(task_sid: task_sid)).to be_nil
+      end
+    end
+  end
+
+  def create_task(**attrs)
+    db = TwilioStub::DB
+    schema = db.read("schema") || TwilioStub::DEFAULT_SCHEMA.dup
+
+    task = TwilioStub::DEFAULT_TASK_SCHEMA.merge(attrs.transform_keys(&:to_s))
+    schema["tasks"] << task
+    db.write("schema", schema)
+
+    task
+  end
 end
