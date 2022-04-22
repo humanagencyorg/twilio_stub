@@ -115,6 +115,56 @@ RSpec.describe TwilioStub::DialogResolver do
       end
     end
 
+    context "when target task is missing, but message contains keyword" do
+      it "detects task by keyword in message body" do
+        # Preparation
+        channel_name = "fake"
+        messages_key = "channel_fake_messages"
+        task_name = "target_task_name"
+        keyword = "el_diablo"
+        schema = {
+          "tasks" => [
+            {
+              "uniqueName" => task_name,
+              "actions" => {
+                "actions" => [
+                  { "say" => "hello target" },
+                ],
+              },
+              "samples" => [
+                {
+                  "sid" => "UF#{Faker::Crypto.md5}",
+                  "Language" => "en-US",
+                  "TaggedText" => keyword,
+                },
+              ],
+            },
+            {
+              "uniqueName" => "greeting",
+              "actions" => {
+                "actions" => [
+                  { "say" => "hello greeting" },
+                ],
+              },
+            },
+          ],
+        }
+
+        TwilioStub::DB.write("schema", schema)
+        TwilioStub::DB.write(messages_key, [])
+
+        # Execution
+        described_class.new(channel_name, body: keyword).call
+
+        # Expectation
+        messages = TwilioStub::DB.read(messages_key)
+        expect(messages.count).to eq(1)
+        expect(messages.first[:body]).to eq("hello target")
+        expect(messages.first[:author]).to eq("bot")
+        expect(messages.first[:sid].length).to eq(8)
+      end
+    end
+
     context "when target task provided" do
       it "looking for target action and execute it" do
         # Preparation
@@ -1171,7 +1221,7 @@ RSpec.describe TwilioStub::DialogResolver do
               ],
             },
             "samples" => [
-              { "taggedText" => "el_diablo" },
+              { "TaggedText" => "el_diablo" },
             ],
           },
           {
@@ -1186,7 +1236,7 @@ RSpec.describe TwilioStub::DialogResolver do
               ],
             },
             "samples" => [
-              { "taggedText" => "carbonara" },
+              { "TaggedText" => "carbonara" },
             ],
           },
           {
@@ -1299,7 +1349,7 @@ RSpec.describe TwilioStub::DialogResolver do
                 ],
               },
               "samples" => [
-                { "taggedText" => "el_diablo" },
+                { "TaggedText" => "el_diablo" },
               ],
             },
             {
@@ -1314,7 +1364,7 @@ RSpec.describe TwilioStub::DialogResolver do
                 ],
               },
               "samples" => [
-                { "taggedText" => "carbonara" },
+                { "TaggedText" => "carbonara" },
               ],
             },
             {

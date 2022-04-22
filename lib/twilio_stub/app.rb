@@ -115,8 +115,9 @@ module TwilioStub
         status 200
 
         DialogResolver.
-          new(channel_name, target: params[:TargetTask]).
+          new(channel_name, target: params[:TargetTask], body: params["Text"]).
           call
+
         message = DB.read(messages_key).last[:body]
         {
           response: {

@@ -6,10 +6,11 @@ require "twilio_stub/validator"
 
 module TwilioStub
   class DialogResolver
-    def initialize(channel_name, async: nil, target: nil)
+    def initialize(channel_name, async: nil, target: nil, body: nil)
       @channel_name = channel_name
       @target = target
       @async_task = async
+      @body = body
     end
 
     def call
@@ -36,12 +37,22 @@ module TwilioStub
     end
 
     def start_dialog
-      task = find_task_by_name(@target || "greeting")
+      # NOTE: Looking for chatbot task here. If client did not specify target,
+      # but there is a message body, we are checking if message body
+      # is a keyword that can identify target task
+      task = find_task_by_sample if @target.nil? && @body
+      task ||= find_task_by_name(@target || "greeting")
 
       write_data("dialog_sid", random_dialog_string)
       write_data("task", task)
 
       handle_actions(task.dig("actions", "actions"))
+    end
+
+    def find_task_by_sample
+      schema["tasks"].detect do |task|
+        task["samples"]&.any? { |sample| sample["TaggedText"] == @body }
+      end
     end
 
     def handle_actions(actions)
@@ -117,7 +128,7 @@ module TwilioStub
 
       tasks = task_names.map(&method(:find_task_by_name))
       task = tasks.detect do |t|
-        result == t.dig("samples", 0, "taggedText")
+        result == t.dig("samples", 0, "TaggedText")
       end
 
       if task
