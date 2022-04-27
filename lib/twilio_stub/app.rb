@@ -175,6 +175,25 @@ module TwilioStub
       }.to_json
     end
 
+    delete "/v1/Services/:ms_sid/PhoneNumbers/:phone_number_sid" do
+      content_type "application/json"
+      status 200
+
+      messaging_service = DB.read("messaging_service")
+      phone_numbers = messaging_service["phone_numbers"]
+      phone_number = phone_numbers.
+        detect { |item| item["sid"] == params["phone_number_sid"] }
+
+      if phone_number
+        phone_numbers.delete(phone_number)
+        DB.write("messaging_service", messaging_service)
+
+        status 200
+      else
+        status 404
+      end
+    end
+
     post "/v1/Assistants" do
       sid = "UA#{Faker::Crypto.md5}"
       friendly_name = params["FriendlyName"]
@@ -326,6 +345,28 @@ module TwilioStub
         sid: phone_number_sid,
         phone_number: phone_number,
       }.to_json
+    end
+
+    # FIXME: Implement it
+    delete "/:api_version/Accounts/:account_id/IncomingPhoneNumbers/:phone_number_sid.json" do # rubocop:disable Layout/LineLength
+      # Faker::Config.locale = "en-US"
+      # phone_number = Faker::PhoneNumber.cell_phone_in_e164
+      # phone_number_sid = "PN#{Faker::Crypto.md5}"
+
+      # numbers = DB.read("phone_numbers") || []
+      # numbers.push(
+      #   phone_number: phone_number,
+      #   phone_number_sid: phone_number_sid,
+      # )
+      # DB.write("phone_numbers", numbers)
+
+      # content_type "application/json"
+      # status 200
+
+      # {
+      #   sid: phone_number_sid,
+      #   phone_number: phone_number,
+      # }.to_json
     end
 
     post "/:api_version/Accounts/:assistant_sid/Messages.json" do

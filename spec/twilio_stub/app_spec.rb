@@ -440,6 +440,61 @@ RSpec.describe TwilioStub::App do
         response = JSON.parse(last_response.body)
         expect(response["sid"]).to eq(phone_number_sid)
       end
+
+      xit "creates new record of phone number"
+    end
+
+    describe "DELETE /v1/Services/:ms_sid/PhoneNumbers/:phone_number_sid" do
+      it "responds with success" do
+        phone_number_sid = "fake_phone_number_sid"
+
+        db = TwilioStub::DB
+        db.write(
+          "messaging_service",
+          {
+            "sid" => "Services_SID",
+            "friendly_name" => "Friendly Name",
+            "phone_numbers" => [
+              {"sid" => phone_number_sid},
+              {"sid" => "another phone number sid"}
+            ]
+          }
+        )
+
+        delete "/v1/Services/MSSID/PhoneNumbers/#{phone_number_sid}"
+
+        expect(last_response.status).to eq(200)
+      end
+
+      it "deletes phone nuber from database" do
+        phone_number_sid = "fake_phone_number_sid"
+
+        db = TwilioStub::DB
+        db.write(
+          "messaging_service",
+          {
+            "sid" => "Services_SID",
+            "friendly_name" => "Friendly Name",
+            "phone_numbers" => [
+              {"sid" => phone_number_sid},
+              {"sid" => "another phone number sid"}
+            ]
+          }
+        )
+
+        expect { delete "/v1/Services/MSSID/PhoneNumbers/#{phone_number_sid}" }.
+          to change { db.read("messaging_service")["phone_numbers"] }.
+          to([{"sid" => "another phone number sid"}])
+      end
+
+      xcontext "when there is no Service with given sid" do
+        it "responds with 404"
+      end
+
+      context "when there is no Phone Number with given sid" do
+        it "responds with 404" do
+        end
+      end
     end
 
     describe "POST /v1/Assistants" do
