@@ -1285,6 +1285,26 @@ RSpec.describe TwilioStub::App do
         )
       end
     end
+
+    describe "GET /:api_version/Assistants/:assistant_sid/Queries.json" do
+      it "returns chat response" do
+        assistant_sid = 123
+        expected_response = {
+          "results" => {
+            "fields" => [{
+              "name" => "fake_name",
+              "type" => "fake_type",
+            }],
+          },
+        }
+
+        get "/v1/Assistants/#{assistant_sid}/Queries.json"
+
+        expect(last_response.status).to eq(200)
+        response = JSON.parse(last_response.body)
+        expect(response).to eq(expected_response)
+      end
+    end
   end
 
   def stub_dialog_resolver

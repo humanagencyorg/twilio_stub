@@ -373,5 +373,15 @@ module TwilioStub
 
       message.slice(:sid, :status, :num_media, :num_segments).to_json
     end
+
+    get "/:api_version/Assistants/:assistant_sid/Queries.json" do
+      DB.write("assistant_id", params[:assistant_id])
+
+      content_type "application/json"
+      status 200
+
+      { results: { fields: [{ name: "fake_name",
+                              type: "fake_type" }] } }.to_json
+    end
   end
 end
