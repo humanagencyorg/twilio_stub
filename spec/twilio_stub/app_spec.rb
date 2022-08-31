@@ -1305,6 +1305,51 @@ RSpec.describe TwilioStub::App do
         expect(response).to eq(expected_response)
       end
     end
+
+    describe "POST /:api_version/Assistants/:assistant_sid/Tasks/:task_sid/Fields.json" do
+      it "returns field sid" do
+        sid = "fake_field_sid"
+        assistant_sid = "fake_assistant_sid"
+        task_sid = "fake_task_sid"
+        full_sid = "UE#{sid}"
+        params = {
+          UniqueName: "fake_name",
+          FieldType: "fake_type",
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(sid)
+
+        post "/v2/Assistants/#{assistant_sid}/Tasks/#{task_sid}/Fields.json",
+             params
+
+        expect(last_response.status).to eq(200)
+        response = JSON.parse(last_response.body)
+        expect(response["sid"]).to eq(full_sid)
+      end
+
+      it "saves task field" do
+        sid = "fake_field_sid"
+        name = "fake_name"
+        type = "fake_type"
+        assistant_sid = "fake_assistant_sid"
+        task_sid = "fake_task_sid"
+        full_sid = "UE#{sid}"
+        params = {
+          UniqueName: name,
+          FieldType: type,
+        }
+        allow(Faker::Crypto).to receive(:md5).and_return(sid)
+
+        post "/v2/Assistants/#{assistant_sid}/Tasks/#{task_sid}/Fields.json",
+             params
+
+        field = TwilioStub::DB.read("task_fields").first
+        expect(field[:sid]).to eq(full_sid)
+        expect(field[:unique_name]).to eq(name)
+        expect(field[:field_type]).to eq(type)
+        expect(field[:assistant_sid]).to eq(assistant_sid)
+        expect(field[:task_sid]).to eq(task_sid)
+      end
+    end
   end
 
   def stub_dialog_resolver

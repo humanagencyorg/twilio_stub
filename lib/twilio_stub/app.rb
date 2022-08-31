@@ -375,13 +375,34 @@ module TwilioStub
     end
 
     get "/:api_version/Assistants/:assistant_sid/Queries.json" do
-      DB.write("assistant_id", params[:assistant_id])
+      DB.write("assistant_sid", params[:assistant_sid])
 
       content_type "application/json"
       status 200
 
       { results: { fields: [{ name: "fake_name",
                               type: "fake_type" }] } }.to_json
+    end
+
+    post "/:api_version/Assistants/:assistant_sid/Tasks/:task_sid/Fields.json" do
+      field_sid = "UE#{Faker::Crypto.md5}"
+
+      fields = DB.read("task_fields") || []
+      fields.push(
+        sid: field_sid,
+        unique_name: "fake_name",
+        field_type: "fake_type",
+        task_sid: params[:task_sid],
+        assistant_sid: params[:assistant_sid],
+      )
+      DB.write("task_fields", fields)
+
+      content_type "application/json"
+      status 200
+
+      {
+        sid: field_sid,
+      }.to_json
     end
   end
 end
