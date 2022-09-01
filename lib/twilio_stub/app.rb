@@ -373,5 +373,42 @@ module TwilioStub
 
       message.slice(:sid, :status, :num_media, :num_segments).to_json
     end
+
+    post "/v1/Assistants/:assistant_sid/Queries" do
+      query_sid = "UH#{Faker::Crypto.md5}"
+      queries = DB.read("chat_queries") || []
+      queries.push(
+        sid: query_sid,
+        assistant_sid: params[:assistant_sid],
+        results: { fields: [{ name: "fake_name", type: "fake_type" }] },
+      )
+      DB.write("chat_queries", queries)
+
+      status 200
+
+      { sid: query_sid,
+        results: { fields: [{ name: "fake_name",
+                              type: "fake_type" }] } }.to_json
+    end
+
+    post "/v1/Assistants/:assistant_sid/Tasks/:task_sid/Fields" do
+      field_sid = "UE#{Faker::Crypto.md5}"
+      fields = DB.read("task_fields") || []
+      fields.push(
+        sid: field_sid,
+        unique_name: "fake_name",
+        field_type: "fake_type",
+        task_sid: params[:task_sid],
+        assistant_sid: params[:assistant_sid],
+      )
+      DB.write("task_fields", fields)
+
+      content_type "application/json"
+      status 200
+
+      {
+        sid: field_sid,
+      }.to_json
+    end
   end
 end
