@@ -18,7 +18,7 @@ module TwilioStub
       instance = new
 
       Capybara::Server.
-        new(instance, port: port).
+        new(instance, port:).
         tap(&:boot)
     end
 

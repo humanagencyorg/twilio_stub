@@ -100,7 +100,7 @@ RSpec.describe TwilioStub do
       status = "fake_status"
       callback_url = "http://fake_url.com"
       ms = {
-        callback_url: callback_url,
+        callback_url:,
       }
       expected_body = {
         MessageSid: sid,
@@ -113,7 +113,7 @@ RSpec.describe TwilioStub do
       stub_request(:post, callback_url).
         to_return(status: 200)
 
-      described_class.sent_sms_status_callback(sid: sid, status: status)
+      described_class.sent_sms_status_callback(sid:, status:)
 
       expect(WebMock).to have_requested(:post, callback_url).
         with(body: expected_body)
@@ -173,7 +173,7 @@ RSpec.describe TwilioStub do
     it "calls inbound url with proper params" do
       md5 = "fake_md_5"
       inbound_url = "http://fake.url"
-      ms = { inbound_url: inbound_url }
+      ms = { inbound_url: }
       from = "12345678901"
       body = "message body"
       request_body = {
@@ -191,7 +191,7 @@ RSpec.describe TwilioStub do
       stub_request(:post, inbound_url).
         to_return(status: 200)
 
-      described_class.send_sms_response(from: from, body: body)
+      described_class.send_sms_response(from:, body:)
 
       expect(WebMock).to have_requested(:post, inbound_url).
         with(body: request_body)
@@ -200,14 +200,14 @@ RSpec.describe TwilioStub do
     it "creates sms_messages in DB" do
       md5 = "fake_md_5"
       inbound_url = "http://fake.url"
-      ms = { sid: "fake_message_sid", inbound_url: inbound_url }
+      ms = { sid: "fake_message_sid", inbound_url: }
       from = "12345678901"
       body = "message body"
       expected_sms = {
         sid: "MS#{md5}",
-        body: body,
+        body:,
         ms_sid: ms[:sid],
-        from: from,
+        from:,
         status: "delivered",
         num_media: "0",
         num_segments: "1",
@@ -222,7 +222,7 @@ RSpec.describe TwilioStub do
       stub_request(:post, inbound_url).
         to_return(status: 200)
 
-      described_class.send_sms_response(from: from, body: body)
+      described_class.send_sms_response(from:, body:)
 
       expect(TwilioStub::DB).to have_received(:write).
         with("sms_messages", [expected_sms])

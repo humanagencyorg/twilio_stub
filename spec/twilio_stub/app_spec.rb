@@ -56,7 +56,7 @@ RSpec.describe TwilioStub::App do
         }
         token = JWT.encode(channel_info, nil, "none")
         params = {
-          token: token,
+          token:,
         }
 
         get "/js_api/channels/#{channel_name}", params
@@ -70,15 +70,15 @@ RSpec.describe TwilioStub::App do
         service_sid = "123"
         channel_info = {
           grants: {
-            identity: identity,
+            identity:,
             chat: {
-              service_sid: service_sid,
+              service_sid:,
             },
           },
         }
         token = JWT.encode(channel_info, nil, "none")
         params = {
-          token: token,
+          token:,
         }
 
         get "/js_api/channels/#{channel_name}", params
@@ -101,7 +101,7 @@ RSpec.describe TwilioStub::App do
         }
         token = JWT.encode(channel_info, nil, "none")
         params = {
-          token: token,
+          token:,
         }
 
         get "/js_api/channels/#{channel_name}", params
@@ -179,13 +179,13 @@ RSpec.describe TwilioStub::App do
         channel_name = "chanel"
         message = "message"
         request_body = {
-          message: message,
+          message:,
         }.to_json
         headers = { "CONTENT_TYPE" => "application/json" }
         channel_db_key = "channel_#{channel_name}"
         customer_id = "123"
         channel_data = {
-          customer_id: customer_id,
+          customer_id:,
         }
         message_db_key = "channel_#{channel_name}_messages"
         TwilioStub::DB.write(channel_db_key, channel_data)
@@ -1268,7 +1268,7 @@ RSpec.describe TwilioStub::App do
           body: body1,
           ms_sid: message_service_sid1,
           to: to1,
-          assistant_sid: assistant_sid,
+          assistant_sid:,
           status: "delivered",
           num_media: "0",
           num_segments: "1",
@@ -1278,7 +1278,7 @@ RSpec.describe TwilioStub::App do
           body: body2,
           ms_sid: message_service_sid2,
           to: to2,
-          assistant_sid: assistant_sid,
+          assistant_sid:,
           status: "delivered",
           num_media: "0",
           num_segments: "1",

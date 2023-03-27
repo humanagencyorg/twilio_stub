@@ -1,14 +1,14 @@
 module TwilioStub
   class Validator
-    FIRST_NAME = /^[A-Z]\w+$/.freeze
-    LAST_NAME = /^[A-Z]\w+$/.freeze
-    EMAIL = /^\w+@\w+\.\w{2,4}$/.freeze
-    CITY = /^(Kyiv)|(Odessa)|(Lviv)|(New\sYork)|(Saint\sLouis)|(Washington)$/.freeze # rubocop:disable Layout/LineLength
-    COUNTRY = /^(Ukraine)|(USA)|(United\sStates\sof\sAmerica)|(Great\sBritain)$/.freeze # rubocop:disable Layout/LineLength
-    US_STATE = /^(MO)|(CA)|(NY)$/.freeze
-    ZIP_CODE = /^\d{5,6}$/.freeze
-    PHONE_NUMBER = /^\d{10}$/.freeze
-    YES_NO = /^(yes)|(no)$/i.freeze
+    FIRST_NAME = /^[A-Z]\w+$/
+    LAST_NAME = /^[A-Z]\w+$/
+    EMAIL = /^\w+@\w+\.\w{2,4}$/
+    CITY = /^(Kyiv)|(Odessa)|(Lviv)|(New\sYork)|(Saint\sLouis)|(Washington)$/ # rubocop:disable Layout/LineLength
+    COUNTRY = /^(Ukraine)|(USA)|(United\sStates\sof\sAmerica)|(Great\sBritain)$/ # rubocop:disable Layout/LineLength
+    US_STATE = /^(MO)|(CA)|(NY)$/
+    ZIP_CODE = /^\d{5,6}$/
+    PHONE_NUMBER = /^\d{10}$/
+    YES_NO = /^(yes)|(no)$/i
     MATCHERS = {
       "Twilio.FIRST_NAME" => FIRST_NAME,
       "Twilio.LAST_NAME" => LAST_NAME,
