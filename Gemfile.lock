@@ -6,7 +6,7 @@ PATH
       capybara
       faker (~> 2.11)
       jwt (~> 2.2)
-      sinatra (~> 3.0)
+      sinatra (>= 2.2.2)
       sinatra-cross_origin (~> 0.4)
       webmock
 
