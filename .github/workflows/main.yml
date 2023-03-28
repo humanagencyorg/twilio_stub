@@ -30,7 +30,7 @@ jobs:
       run: bundle exec rspec spec
     - name: Build and publish gem
       if: success()
-      uses: jstastny/publish-gem-to-github@v1.0
+      uses: jstastny/publish-gem-to-github@v2.1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         owner: humanagencyorg
