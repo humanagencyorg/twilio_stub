@@ -4,5 +4,7 @@ source "https://rubygems.org"
 gemspec
 
 group :test do
+  gem "rubocop-rake"
+  gem "rubocop-rspec"
   gem "simplecov", require: false
 end
