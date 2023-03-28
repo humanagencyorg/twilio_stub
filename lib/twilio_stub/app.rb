@@ -153,8 +153,8 @@ module TwilioStub
       sid = "MG#{Faker::Crypto.md5}"
       friendly_name = params["FriendlyName"]
       messaging_service = {
-        sid:,
-        friendly_name:,
+        sid: sid,
+        friendly_name: friendly_name,
         callback_url: params["StatusCallback"],
         inbound_url: params["InboundRequestUrl"],
       }
@@ -163,7 +163,7 @@ module TwilioStub
       content_type "application/json"
       status 200
 
-      { sid:, friendly_name: }.to_json
+      { sid: sid, friendly_name: friendly_name }.to_json
     end
 
     post "/v1/Services/:ms_sid/PhoneNumbers" do
@@ -183,8 +183,8 @@ module TwilioStub
       DB.write(
         "chatbot",
         assistant_sid: sid,
-        friendly_name:,
-        unique_name:,
+        friendly_name: friendly_name,
+        unique_name: unique_name,
       )
 
       DB.write(
@@ -198,7 +198,7 @@ module TwilioStub
       content_type "application/json"
       status 200
 
-      { sid:, unique_name: }.to_json
+      { sid: sid, unique_name: unique_name }.to_json
     end
 
     post "/v1/Assistants/:assistant_sid" do
@@ -212,8 +212,8 @@ module TwilioStub
       status 200
 
       {
-        sid:,
-        development_stage:,
+        sid: sid,
+        development_stage: development_stage,
       }.to_json
     end
 
@@ -252,7 +252,7 @@ module TwilioStub
       DB.write("schema", schema)
 
       status 200
-      { sid: }.to_json
+      { sid: sid }.to_json
     end
 
     delete "/v1/Assistants/:assistant_sid/Tasks/:task_sid" do
@@ -282,7 +282,7 @@ module TwilioStub
       DB.write("schema", schema)
 
       status 200
-      { sid: }.to_json
+      { sid: sid }.to_json
     end
 
     delete "/v1/Assistants/:assistant_sid/Tasks/:task_sid/Samples/:sample_sid" do # rubocop:disable Layout/LineLength
@@ -314,8 +314,8 @@ module TwilioStub
 
       numbers = DB.read("phone_numbers") || []
       numbers.push(
-        phone_number:,
-        phone_number_sid:,
+        phone_number: phone_number,
+        phone_number_sid: phone_number_sid,
       )
       DB.write("phone_numbers", numbers)
 
@@ -324,7 +324,7 @@ module TwilioStub
 
       {
         sid: phone_number_sid,
-        phone_number:,
+        phone_number: phone_number,
       }.to_json
     end
 

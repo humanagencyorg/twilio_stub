@@ -73,9 +73,9 @@ module TwilioStub
     messages ||= []
     messages.push(
       sid: message_sid,
-      body:,
+      body: body,
       ms_sid: mservice[:sid],
-      from:,
+      from: from,
       status: "delivered",
       num_media: "0",
       num_segments: "1",

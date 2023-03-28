@@ -1398,7 +1398,7 @@ RSpec.describe TwilioStub::DialogResolver do
         public_id = "public_id_123"
         parent_url = "some.url/fake.jpg"
         TwilioStub.media_mapper[public_id] = parent_url
-        media_url = "http://res.cloudinary.com/hyz4jwpo6/" \
+        media_url = "http://res.cloudinary.com/hyz4jwpo6/"\
                     "image/upload/c_lfill,h_720,q_auto:best/#{public_id}.jpg"
 
         schema = {
@@ -1470,8 +1470,8 @@ RSpec.describe TwilioStub::DialogResolver do
     lambda do |body|
       db_messages = TwilioStub::DB.read(key)
       db_messages.push(
-        body:,
-        author:,
+        body: body,
+        author: author,
         sid: SecureRandom.hex,
       )
       TwilioStub::DB.write(

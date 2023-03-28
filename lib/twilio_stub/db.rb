@@ -24,7 +24,7 @@ module TwilioStub
     end
 
     def clear_all
-      FileUtils.rm_f(FILENAME)
+      File.delete(FILENAME) if File.exist?(FILENAME)
     end
   end
 end

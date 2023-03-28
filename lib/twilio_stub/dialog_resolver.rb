@@ -313,7 +313,7 @@ module TwilioStub
       public_id = url.split("/").last.split(".").first
       parent_url = TwilioStub.media_mapper[public_id]
       message = {
-        body:,
+        body: body,
         mediaUrl: parent_url,
         author: "bot",
         sid: random_message_string,
