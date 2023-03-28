@@ -9,9 +9,9 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.email         = ["beznosa@yahoo.com"]
 
   spec.summary       = "Stub server for Twilio."
-  spec.description   = "Gem adds ability to stub backend requests, "\
-                       "js sdk requests and request for schema upload. "\
-                       "When all this elements are stubbed it can be used as "\
+  spec.description   = "Gem adds ability to stub backend requests, " \
+                       "js sdk requests and request for schema upload. " \
+                       "When all this elements are stubbed it can be used as " \
                        "full featured chating engine."
   spec.homepage      = "https://github.com/humanagencyorg/twilio_stub"
   spec.license       = "MIT"
@@ -42,14 +42,12 @@ Gem::Specification.new do |spec| # rubocop:disable Metrics/BlockLength
   spec.add_development_dependency "rake", ">= 12.3.3"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rubocop", ">= 0.82"
-  spec.add_development_dependency "rubocop-rake"
-  spec.add_development_dependency "rubocop-rspec"
 
   spec.add_runtime_dependency "async", "~> 1.26"
   spec.add_runtime_dependency "capybara"
   spec.add_runtime_dependency "faker", "~> 2.11"
   spec.add_runtime_dependency "jwt", "~> 2.2"
-  spec.add_runtime_dependency "sinatra", "~> 2.0"
+  spec.add_runtime_dependency "sinatra", "~> 3.0"
   spec.add_runtime_dependency "sinatra-cross_origin", "~> 0.4"
   spec.add_runtime_dependency "webmock"
   spec.metadata["rubygems_mfa_required"] = "true"
